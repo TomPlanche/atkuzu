@@ -18,33 +18,7 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
         const sessionManager = await getSessionManager();
         await sessionManager.createAndSetSession(event, session.did, atpSession.data.handle);
 
-    // const agent = new Agent(session);
-    // const dateStamp = new Date().toISOString();
-    // let token
-    // await agent.com.atproto.repo.createRecord({
-    //     collection: 'app.bsky.feed.post',
-    //     record: {
-    //         $type: 'app.bsky.feed.post',
-    //         text: 'I found Bailey\'s new SvelteKit template before he finished it and wrote documentation for it. I probably should of checked what it did first.',
-    //         langs: [
-    //             'en'
-    //         ],
-    //         reply: {
-    //             root: {
-    //                 cid: 'bafyreigxcmxkn6egt5ykybaaztnbbkq74facddwva65bwxfyfqrevtpk64',
-    //                 uri: 'at://did:plc:rnpkyqnmsw4ipey6eotbdnnf/app.bsky.feed.post/3m7mi36bsp22u'
-    //             },
-    //             parent: {
-    //                 cid: 'bafyreigxcmxkn6egt5ykybaaztnbbkq74facddwva65bwxfyfqrevtpk64',
-    //                 uri: 'at://did:plc:rnpkyqnmsw4ipey6eotbdnnf/app.bsky.feed.post/3m7mi36bsp22u'
-    //             }
-    //         },
-    //         createdAt: dateStamp,
-    //     }, repo: session.did,  validate: true
-    //
-    // }
-
-    return redirect(302, '/demo');
+        return redirect(302, '/demo');
 
     }catch (err){
         //redirects are errors, so this passes it along
