@@ -33,6 +33,12 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<title>SvelteKit Atproto Demo</title>
+	<meta property="og:title" content="SvelteKit Atproto Demo" />
+	<meta property="og:description"
+		  content="A demo application with pokes." />
+	<meta property="description"
+		  content="A demo application with pokes." />
 </svelte:head>
 
 {#if data.session}

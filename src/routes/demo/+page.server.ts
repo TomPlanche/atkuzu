@@ -30,6 +30,11 @@ export const actions = {
                     text: rt.text,
                     facets: rt.facets,
                     createdAt: new Date().toISOString(),
+                    //This sets the language of the post. Want to most likely get it from a locale of the browser
+                    //cheating here and using english since the rest of the documentations in english and this is a demo
+                    langs: [
+                        'en'
+                    ]
                 };
 
                 const result = await agent.com.atproto.repo.createRecord({

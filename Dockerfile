@@ -1,3 +1,5 @@
+#Had problems with pnpm and sqlite, so just using npm. bit longer but gets the job done.
+
 FROM node:24-slim AS builder
 WORKDIR /app
 

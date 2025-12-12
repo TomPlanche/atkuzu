@@ -61,7 +61,9 @@ export const atpOAuthClient = async () => {
                     token_endpoint_auth_method: isConfidential ? 'private_key_jwt' : 'none',
                     dpop_bound_access_tokens: true,
                     jwks_uri: isConfidential ? `${rootUrl}/.well-known/jwks.json` : undefined,
-                    token_endpoint_auth_signing_alg: isConfidential ? pk?.alg : undefined
+                    token_endpoint_auth_signing_alg: isConfidential ? pk?.alg : undefined,
+                    tos_uri: env.OAUTH_TOS_URI,
+                    policy_uri: env.OAUTH_POLICY_URI,
                 };
 
             return new NodeOAuthClient({
