@@ -1,0 +1,3 @@
+{$OAUTH_DOMAIN} {
+    reverse_proxy localhost:3000
+}

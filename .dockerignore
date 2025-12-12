@@ -1,0 +1,10 @@
+node_modules
+local.db
+.svelte-kit
+build
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
