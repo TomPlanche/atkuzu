@@ -13,6 +13,12 @@ import { Agent } from '@atproto/api';
 import type { NodeOAuthClient } from '@atproto/oauth-client-node';
 import { logger } from '$lib/server/logger';
 
+export class SessionRestorationError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'SessionRestorationError';
+    }
+}
 
 // This is a sliding expiration for the cookie session. Can change it if you want it to be less or more.
 // The actual atproto session goes for a while if it's a confidential client as long as it's refreshed
@@ -52,10 +58,19 @@ export class Session {
             session.expiresAt = new Date(Date.now() + DEFAULT_EXPIRY);
             await this.db.update(sessionStore).set(session).where(eq(sessionStore.id, sessionId));
         }
+        try{
+            const oAuthSession = await this.atpOAuthClient.restore(session.did);
 
-        const oAuthSession = await this.atpOAuthClient.restore(session.did);
-        const agent = new Agent(oAuthSession);
-        return { atpAgent: agent, did: session.did, handle: session.handle };
+            const agent = new Agent(oAuthSession);
+            return { atpAgent: agent, did: session.did, handle: session.handle };
+        }catch (err){
+            const errorMessage = (err as Error).message;
+            logger.warn(`Error restoring session for did: ${session.did}, error: ${errorMessage}`);
+            //Counting any error when restoring a session as a failed session resume and deleting the users web browser session
+            //You can go further and capture different types of errors
+            await this.invalidateUserSessions(session.did);
+            throw new SessionRestorationError(`Failed to restore your session: ${errorMessage}. Please log in again.`);
+        }
     }
 
     private setSessionTokenCookie(event: RequestEvent, token: string, expiresAt: Date): void {
@@ -117,7 +132,13 @@ export class Session {
         if (!token) {
             return NULL_SESSION_RESPONSE;
         }
-        return this.validateSessionToken(token);
+        try {
+            return await this.validateSessionToken(token);
+        } catch (err) {
+            //We delete the cookie on any error and pass along the error
+            this.deleteSessionTokenCookie(event);
+            throw err;
+        }
     }
 
 }

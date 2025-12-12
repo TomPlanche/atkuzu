@@ -7,7 +7,7 @@ import { and, eq, lt } from 'drizzle-orm';
 import { STATE_STORE } from '$lib/server/cache';
 import { logger } from '$lib/server/logger';
 import { HOUR } from '@atproto/common';
-import { getSessionManager } from '$lib/server/session';
+import { getSessionManager, SessionRestorationError } from '$lib/server/session';
 
 const clearExpiredStates = async () => {
     try {
@@ -50,23 +50,39 @@ export const handle: Handle = async ({ event, resolve }) => {
         event.locals.atpAgent = null;
         return resolve(event);
     }
-    const sessionManager = await getSessionManager();
-    const { atpAgent, did, handle } = await sessionManager.getSessionFromRequest(event);
 
-    if(atpAgent == null){
+    const sessionManager = await getSessionManager();
+
+    try {
+        const { atpAgent, did, handle } = await sessionManager.getSessionFromRequest(event);
+
+        if(atpAgent == null){
+            event.locals.session = null;
+            event.locals.atpAgent = null;
+            return resolve(event);
+        }
+
+        // Store atpAgent in locals (server-side only, not serialized)
+        event.locals.atpAgent = atpAgent;
+
+        // Store only serializable data in session (gets passed to client via load functions)
+        event.locals.session = {
+            did,
+            handle
+        };
+    } catch (err) {
+        if (err instanceof SessionRestorationError) {
+            //You can propagate this error to the frontend to let your users know their session unexpectedly ended
+            //I opted out of not completely implementing this since everyone may have a different idea of what to do in their apps
+            //For instance I would use the cache to create a flash message that when loaded it deletes and show it on the layout
+        } else {
+            // Unexpected error, re-throw
+            throw err;
+        }
+
         event.locals.session = null;
         event.locals.atpAgent = null;
-        return resolve(event);
     }
-
-    // Store atpAgent in locals (server-side only, not serialized)
-    event.locals.atpAgent = atpAgent;
-
-    // Store only serializable data in session (gets passed to client via load functions)
-    event.locals.session = {
-        did,
-        handle
-    };
 
     return resolve(event);
 };
