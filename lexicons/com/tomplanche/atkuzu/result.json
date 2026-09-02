@@ -1,0 +1,46 @@
+{
+  "lexicon": 1,
+  "id": "com.tomplanche.atkuzu.result",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "An immutable record of one completed atkuzu (Binairo/Takuzu) daily puzzle, written to the player's own PDS. Write-once: no field may change after creation. The record key is the puzzle number as a string (e.g. `412`), so each puzzle can be recorded at most once per account and re-solving cannot overwrite or spam.",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "required": ["puzzleNumber", "puzzleDate", "solved", "durationSeconds", "createdAt"],
+        "properties": {
+          "puzzleNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Daily puzzle index = whole UTC days since the shared epoch, +1. Launch day = 1."
+          },
+          "puzzleDate": {
+            "type": "string",
+            "format": "datetime",
+            "description": "UTC midnight datetime of the puzzle's calendar day."
+          },
+          "solved": {
+            "type": "boolean",
+            "description": "Whether the player finished the puzzle (grid fully and correctly filled)."
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Time taken to finish the puzzle, in seconds."
+          },
+          "toggleCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of cell toggles made during the attempt (including corrections). Optional efficiency stat, absent if not tracked."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the player finished the puzzle and the record was created."
+          }
+        }
+      }
+    }
+  }
+}

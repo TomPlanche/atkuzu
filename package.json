@@ -16,7 +16,9 @@
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"lexicons:validate": "tsx scripts/validate-lexicons.ts",
+		"lexicons:publish": "tsx scripts/publish-lexicons.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
@@ -34,6 +36,7 @@
 		"globals": "^16.5.0",
 		"svelte": "^5.43.8",
 		"svelte-check": "^4.3.4",
+		"tsx": "^4.22.4",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.47.0",
 		"vite": "^7.2.2"

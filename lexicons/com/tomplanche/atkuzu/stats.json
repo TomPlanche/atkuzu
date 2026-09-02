@@ -1,0 +1,47 @@
+{
+  "lexicon": 1,
+  "id": "com.tomplanche.atkuzu.stats",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A single, mutable per-account streak/stats record, edited in place like a profile. It also doubles as atkuzu's declaration / signaling record: its presence signals that an account plays atkuzu, and its deletion signals opt-out. Created on first play, even before any stats accrue.",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["updatedAt"],
+        "properties": {
+          "currentStreak": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Consecutive solved puzzles up to the most recent played puzzle."
+          },
+          "maxStreak": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Longest streak ever achieved."
+          },
+          "gamesPlayed": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total puzzles completed (solved or not)."
+          },
+          "gamesWon": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total puzzles solved."
+          },
+          "lastPuzzleNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Puzzle number of the most recent completed puzzle, used to detect streak breaks."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When this record was last updated."
+          }
+        }
+      }
+    }
+  }
+}
