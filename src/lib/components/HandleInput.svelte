@@ -31,6 +31,15 @@
 		showDisplayName?: boolean;
 	} = $props();
 
+	const loadRecent = (): ActorSuggestion[] => {
+		try {
+			const raw = localStorage.getItem(RECENT_KEY);
+			return raw ? JSON.parse(raw) : [];
+		} catch {
+			return [];
+		}
+	};
+
 	let suggestions = $state<ActorSuggestion[]>([]);
 	let recent = $state<ActorSuggestion[]>(loadRecent());
 	let open = $state(false);
@@ -45,16 +54,7 @@
 	const showingRecent = $derived(value.trim().length === 0);
 	const items = $derived(showingRecent ? recent : suggestions);
 
-	function loadRecent(): ActorSuggestion[] {
-		try {
-			const raw = localStorage.getItem(RECENT_KEY);
-			return raw ? JSON.parse(raw) : [];
-		} catch {
-			return [];
-		}
-	}
-
-	function saveRecent(actor: ActorSuggestion) {
+	const saveRecent = (actor: ActorSuggestion) => {
 		try {
 			const next = [actor, ...recent.filter((a) => a.handle !== actor.handle)].slice(0, RECENT_MAX);
 			localStorage.setItem(RECENT_KEY, JSON.stringify(next));
@@ -62,9 +62,9 @@
 		} catch {
 			// localStorage unavailable (private mode, quota) — not fatal
 		}
-	}
+	};
 
-	async function search(q: string) {
+	const search = async (q: string) => {
 		if (currentAbort) {
 			currentAbort.abort();
 		}
@@ -104,9 +104,9 @@
 				loading = false;
 			}
 		}
-	}
+	};
 
-	function onInput(ev: Event) {
+	const onInput = (ev: Event) => {
 		value = (ev.target as HTMLInputElement).value;
 		fetchError = null;
 
@@ -131,22 +131,22 @@
 		}
 
 		debounceTimer = setTimeout(() => search(q), DEBOUNCE_MS);
-	}
+	};
 
-	function onFocus() {
+	const onFocus = () => {
 		if (showingRecent && recent.length > 0) {
 			open = true;
 		}
-	}
+	};
 
-	function select(actor: ActorSuggestion) {
+	const select = (actor: ActorSuggestion) => {
 		value = actor.handle;
 		open = false;
 		focusIndex = -1;
 		saveRecent(actor);
-	}
+	};
 
-	function onKeydown(ev: KeyboardEvent) {
+	const onKeydown = (ev: KeyboardEvent) => {
 		if (!open || items.length === 0) {
 			return;
 		}
@@ -166,14 +166,14 @@
 			open = false;
 			focusIndex = -1;
 		}
-	}
+	};
 
-	function onWindowClick(ev: MouseEvent) {
+	const onWindowClick = (ev: MouseEvent) => {
 		if (container && !container.contains(ev.target as Node)) {
 			open = false;
 			focusIndex = -1;
 		}
-	}
+	};
 </script>
 
 <svelte:window onclick={onWindowClick} />

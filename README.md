@@ -2,6 +2,8 @@
 
 A game built on the [AT Protocol](https://atproto.com), inspired by [AT Mot](https://atmot.herve.bzh).
 
+atkuzu = AT Protocol + [Takuzu](https://en.wikipedia.org/wiki/Takuzu) (aka Binairo). Players solve a daily puzzle; results are written to their own PDS as atproto records.
+
 This is a SvelteKit app with browser OAuth already wired up: users log in with their own AT Protocol handle (Bluesky or any other PDS), and actions are taken on their behalf against their own repo. There is no game logic here yet, this is the OAuth/session/DB scaffolding the game will be built on.
 
 Forked from the [atproto-sveltekit-template](https://tangled.org/pds.dad/atproto-sveltekit-template) — see [NOTICE.md](NOTICE.md) for attribution.
@@ -37,7 +39,7 @@ Production most likely wants the confidential client for the longest lifetime. T
 
 OAuth scopes are permissions to the user's repo you are requesting. Read more at [atproto.com/specs/permission](https://atproto.com/specs/permission).
 
-Set requested scopes via the `OAUTH_SCOPES` environment variable, tailored to whatever lexicons the game ends up writing to. For development or full access to a user's repo, `atproto transition:generic`.
+Set requested scopes via the `OAUTH_SCOPES` environment variable, tailored to whatever lexicons the game ends up writing to. The default in [client.ts](./src/lib/server/atproto/client.ts) requests write access to atkuzu's own collections (see [Lexicons](#lexicons) below). For development or full access to a user's repo, `atproto transition:generic`.
 
 > You may find that the OAuth consent screen doesn't immediately reflect a scope change. The PDS can cache those. [Docs say this can be anywhere from 15-30mins](https://atproto.com/specs/permission#resolution-and-caching)
 
@@ -65,6 +67,27 @@ This project uses [drizzle ORM](https://orm.drizzle.team/) with the sqlite adapt
 ### Handle input
 
 [HandleInput.svelte](./src/lib/components/HandleInput.svelte) is a typeahead component for AT Protocol handles, used on the login screen. It queries the public Bluesky appview (`public.api.bsky.app`) and remembers recently picked handles in `localStorage`.
+
+### Lexicons
+
+atkuzu's record types are defined as [lexicons](https://atproto.com/specs/lexicon) under the `com.tomplanche.atkuzu.*` NSID authority (domain authority `atkuzu.tomplanche.com`, reversed):
+
+- [lexicons/com/tomplanche/atkuzu/result.json](./lexicons/com/tomplanche/atkuzu/result.json) — `com.tomplanche.atkuzu.result`, one immutable write-once record per completed daily puzzle (puzzle number, whether it was solved, time taken, and optionally how many cells were toggled)
+- [lexicons/com/tomplanche/atkuzu/stats.json](./lexicons/com/tomplanche/atkuzu/stats.json) — `com.tomplanche.atkuzu.stats`, a single mutable per-account record (`currentStreak`, `maxStreak`, `gamesPlayed`, `gamesWon`, `lastPuzzleNumber`), also doubling as the "this account plays atkuzu" declaration record
+
+Validate the schemas against the [Lexicon Style Guide](https://atproto.com/guides/lexicon-style-guide):
+
+```sh
+pnpm run lexicons:validate
+```
+
+For now these are used unpublished (`validate: false` when calling `createRecord`), no DNS setup required. To make them network-resolvable and enable `validate: true`, publish them as `com.atproto.lexicon.schema` records (run by the account that controls the namespace authority):
+
+```sh
+ATKUZU_PUBLISH_IDENTIFIER=you.example ATKUZU_PUBLISH_PASSWORD=<app-password> pnpm run lexicons:publish
+```
+
+> Publishing also requires a `_lexicon` DNS TXT record on `_lexicon.atkuzu.tomplanche.com` with value `did=<publishing did>`. Lexicon resolution is **not hierarchical** — each distinct authority needs its own exact TXT record, resolvers never walk up the DNS tree. See [Lexicon Publication and Resolution](https://atproto.com/specs/lexicon#lexicon-publication-and-resolution).
 
 ### Other production considerations
 

@@ -25,7 +25,19 @@ export default defineConfig(
 		'semi': ['error', 'always'],
 		'object-curly-spacing': ['error', 'always'],
 		'curly': ['error', 'all'],
-		'brace-style': ['error', '1tbs', { allowSingleLine: false }]
+		'brace-style': ['error', '1tbs', { allowSingleLine: false }],
+		// No `function` declarations — always `const foo = (...) => {}`.
+		'func-style': ['error', 'expression', { allowArrowFunctions: true }],
+		// No `function` expressions either, except where an arrow can't stand in
+		// (class methods/constructors, object getters/setters, generators).
+		'no-restricted-syntax': [
+			'error',
+			{
+				selector:
+					'FunctionExpression[generator=false]:not(MethodDefinition > FunctionExpression):not(Property[method=true] > FunctionExpression):not(Property[kind=/^(get|set)$/] > FunctionExpression)',
+				message: 'Use an arrow function instead of a function expression.'
+			}
+		]
 		}
 	},
 	{

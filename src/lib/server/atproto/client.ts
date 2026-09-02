@@ -10,7 +10,7 @@ import type { OAuthClientMetadataInput } from '@atproto/oauth-types';
 //You will need to change these if you are using another collection, can also change by setting the env OAUTH_SCOPES
 //For permission to all you can uncomment below
 // const DEFAULT_SCOPES = 'atproto transition:generic';
-const DEFAULT_SCOPES = 'atproto repo:app.bsky.feed.post?action=create repo:xyz.atpoke.graph.poke';
+const DEFAULT_SCOPES = 'atproto repo:com.tomplanche.atkuzu.result?action=create repo:com.tomplanche.atkuzu.stats?action=create&action=update';
 const loadJwk = async () => {
     const raw = env.OAUTH_JWK;
     if (!raw) {
