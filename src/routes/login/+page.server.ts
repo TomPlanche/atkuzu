@@ -6,7 +6,7 @@ import { logger } from '$lib/server/logger';
 
 export const load: PageServerLoad = async (event) => {
   if(event.locals.session) {
-    return redirect(302, '/demo');
+    return redirect(302, '/');
   }
   return;
 };

@@ -1,5 +1,5 @@
 {
-	"name": "atproto-sveltekit-template",
+	"name": "atkuzu",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
@@ -39,8 +39,6 @@
 		"vite": "^7.2.2"
 	},
 	"dependencies": {
-		"@atcute/client": "^4.1.1",
-		"@atcute/microcosm": "^1.0.0",
 		"@atproto/api": "^0.18.6",
 		"@atproto/common": "^0.5.3",
 		"@atproto/crypto": "^0.4.5",

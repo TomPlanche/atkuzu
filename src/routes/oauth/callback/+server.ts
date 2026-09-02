@@ -18,7 +18,7 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
         const sessionManager = await getSessionManager();
         await sessionManager.createAndSetSession(event, session.did, atpSession.data.handle);
 
-        return redirect(302, '/demo');
+        return redirect(302, '/');
 
     }catch (err){
         //redirects are errors, so this passes it along

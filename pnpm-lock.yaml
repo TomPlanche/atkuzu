@@ -8,12 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@atcute/client':
-        specifier: ^4.1.1
-        version: 4.1.1
-      '@atcute/microcosm':
-        specifier: ^1.0.0
-        version: 1.0.0
       '@atproto/api':
         specifier: ^0.18.6
         version: 0.18.6
@@ -112,18 +106,6 @@ importers:
 
 packages:
 
-  '@atcute/client@4.1.1':
-    resolution: {integrity: sha512-FROCbTTCeL5u4tO/n72jDEKyKqjdlXMB56Ehve3W/gnnLGCYWvN42sS7tvL1Mgu6sbO3yZwsXKDrmM2No4XpjA==}
-
-  '@atcute/identity@1.1.3':
-    resolution: {integrity: sha512-oIqPoI8TwWeQxvcLmFEZLdN2XdWcaLVtlm8pNk0E72As9HNzzD9pwKPrLr3rmTLRIoULPPFmq9iFNsTeCIU9ng==}
-
-  '@atcute/lexicons@1.2.5':
-    resolution: {integrity: sha512-9yO9WdgxW8jZ7SbzUycH710z+JmsQ9W9n5S6i6eghYju32kkluFmgBeS47r8e8p2+Dv4DemS7o/3SUGsX9FR5Q==}
-
-  '@atcute/microcosm@1.0.0':
-    resolution: {integrity: sha512-XJW+TMvdktH2maTkVcNU6wKmnHpmNwhmg0Xj4ZY36plHpqNHfxR4kAAcXGSJcjH9CS8I1+cTHiyUQykdeOPeGg==}
-
   '@atproto-labs/did-resolver@0.2.4':
     resolution: {integrity: sha512-sbXxBnAJWsKv/FEGG6a/WLz7zQYUr1vA2TXvNnPwwJQJCjPwEJMOh1vM22wBr185Phy7D2GD88PcRokn7eUVyw==}
 
@@ -206,10 +188,6 @@ packages:
 
   '@atproto/xrpc@0.7.7':
     resolution: {integrity: sha512-K1ZyO/BU8JNtXX5dmPp7b5UrkLMMqpsIa/Lrj5D3Su+j1Xwq1m6QJ2XJ1AgjEjkI1v4Muzm7klianLE6XGxtmA==}
-
-  '@badrap/valita@0.4.6':
-    resolution: {integrity: sha512-4kdqcjyxo/8RQ8ayjms47HCWZIF5981oE5nIenbfThKDxWXtEHKipAOWlflpPJzZx9y/JWYQkp18Awr7VuepFg==}
-    engines: {node: '>= 18'}
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
@@ -1880,25 +1858,6 @@ packages:
 
 snapshots:
 
-  '@atcute/client@4.1.1':
-    dependencies:
-      '@atcute/identity': 1.1.3
-      '@atcute/lexicons': 1.2.5
-
-  '@atcute/identity@1.1.3':
-    dependencies:
-      '@atcute/lexicons': 1.2.5
-      '@badrap/valita': 0.4.6
-
-  '@atcute/lexicons@1.2.5':
-    dependencies:
-      '@standard-schema/spec': 1.0.0
-      esm-env: 1.2.2
-
-  '@atcute/microcosm@1.0.0':
-    dependencies:
-      '@atcute/lexicons': 1.2.5
-
   '@atproto-labs/did-resolver@0.2.4':
     dependencies:
       '@atproto-labs/fetch': 0.2.3
@@ -2065,8 +2024,6 @@ snapshots:
     dependencies:
       '@atproto/lexicon': 0.6.0
       zod: 3.25.76
-
-  '@badrap/valita@0.4.6': {}
 
   '@drizzle-team/brocli@0.10.2': {}
 

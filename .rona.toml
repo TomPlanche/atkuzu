@@ -1,0 +1,92 @@
+# Editor used to open commit_message.md in non-interactive mode.
+editor = "zed"
+
+# Commit types shown in the selector.
+commit_types = ["feat", "fix", "perf", "revert", "docs", "quality", "style", "chore", "refactor", "test", "build", "ci"]
+
+##########
+# COMMIT #
+##########
+
+# Template applied to the final commit message.
+# Built-in variables:
+#   {commit_number}  - sequential commit count on the current branch
+#   {commit_type}    - the type chosen in the selector
+#   {branch_name}    - current branch (prefix stripped, e.g. feat/x -> x)
+#   {message}        - the message entered by the user
+#   {date}           - YYYY-MM-DD
+#   {time}           - HH:MM:SS
+#   {author}         - git user.name
+#   {email}          - git user.email
+# Conditional blocks: {?var}...{/var} renders only when var has a value.
+# Extra variables: add with [[commit_extra_fields]].
+commit_template = "{commit_type}({scope}): {message}"
+
+# Order of prompts in interactive mode (-i).
+# Use the reserved name "message" to position the built-in message prompt.
+# Fields not listed are appended after all listed items.
+# commit_fields_order = ["scope", "message", "ticket"]
+
+# Overrides for the built-in message prompt (uncomment to customise or disable).
+# [commit_message]
+# prompt = "Commit message"
+# validation = ""
+# disabled = false
+
+[[commit_extra_fields]]
+name = "scope"
+prompt = "Select scope"
+kind = "select"
+required = true
+prefetch.source = "command"
+prefetch.command = "git log -50 --pretty=format:%s"
+prefetch.extract_regex = "\\w+\\((?P<value>[^)]*)\\):"
+prefetch.deduplicate = true
+
+# [[commit_extra_fields]]
+# name = "ticket"
+# prompt = "Ticket:"
+# kind = "text"
+# required = false
+# validation = "^[A-Z]+-[0-9]+$"
+# prefetch.source = "branch"
+# prefetch.extract_regex = "[A-Z]+-[0-9]+"
+
+##########
+# BRANCH #
+##########
+
+# Template applied to the generated branch name.
+# Built-in variables:
+#   {branch_type}   - the type chosen in the selector
+#   {description}   - the description entered by the user
+#   {date}          - YYYY-MM-DD
+#   {time}          - HH:MM:SS
+#   {author}        - git user.name
+# Conditional blocks: {?var}...{/var} renders only when var has a value.
+# Extra variables: add with [[branch_extra_fields]].
+# Commit extra fields (from [[commit_extra_fields]]) can also be referenced here.
+branch_template = "{branch_type}/{description}"
+
+# Dedicated branch types (when absent, commit_types is used).
+# branch_types = ["feat", "fix", "chore"]
+
+# When true, branch_types and commit_types are merged in the selector.
+# merge_branch_and_commit_types = false
+
+# Order of prompts for branch creation.
+# Use the reserved name "description" to position the built-in description prompt.
+# branch_field_order = ["description", "ticket"]
+
+# Overrides for the built-in description prompt (uncomment to customise or disable).
+# [branch_description]
+# prompt = "Branch description"
+# validation = ""
+# disabled = false
+
+# [[branch_extra_fields]]
+# name = "description"
+# prompt = "Small description in kebab-case"
+# kind = "text"
+# required = true
+# validation = "^[a-z][a-z0-9-]+$"

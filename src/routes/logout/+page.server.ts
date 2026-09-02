@@ -13,8 +13,8 @@ export const actions: Actions = {
             sessionManager.deleteSessionTokenCookie(event);
 
             const oauthClient = await atpOAuthClient();
-            if(event.locals.did) {
-                await oauthClient.revoke(event.locals.did);
+            if(event.locals.session?.did) {
+                await oauthClient.revoke(event.locals.session.did);
             }
         }
 

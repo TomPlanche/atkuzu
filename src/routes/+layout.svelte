@@ -33,12 +33,12 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>SvelteKit Atproto Demo</title>
-	<meta property="og:title" content="SvelteKit Atproto Demo" />
+	<title>atkuzu</title>
+	<meta property="og:title" content="atkuzu" />
 	<meta property="og:description"
-		  content="A demo application with pokes." />
+		  content="A game built on the AT Protocol." />
 	<meta property="description"
-		  content="A demo application with pokes." />
+		  content="A game built on the AT Protocol." />
 </svelte:head>
 
 {#if data.session}
@@ -54,10 +54,6 @@
 			</li>
 			<li>
 				<a href="/">Home</a>
-			</li>
-
-			<li>
-				<a href="/demo">Demo</a>
 			</li>
 		</ol>
 	</nav>
