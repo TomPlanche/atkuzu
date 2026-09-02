@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { PageProps } from './$types';
+    import { resolve } from '$app/paths';
     let { data }: PageProps = $props();
 </script>
 
@@ -15,6 +16,6 @@
     {#if data.session}
         <p>Logged in as <strong>{data.session.handle}</strong>.</p>
     {:else}
-        <p><a href="/login">Login</a> to play.</p>
+        <p><a href={resolve('/login')}>Login</a> to play.</p>
     {/if}
 </div>

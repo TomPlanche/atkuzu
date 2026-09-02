@@ -23,7 +23,9 @@ export default defineConfig(
 		'no-undef': 'off',
 		'quotes': ['error', 'single'],
 		'semi': ['error', 'always'],
-		'object-curly-spacing': ['error', 'always']
+		'object-curly-spacing': ['error', 'always'],
+		'curly': ['error', 'all'],
+		'brace-style': ['error', '1tbs', { allowSingleLine: false }]
 		}
 	},
 	{

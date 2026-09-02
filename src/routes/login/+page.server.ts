@@ -19,10 +19,11 @@ export const actions = {
       const client = await atpOAuthClient();
       const url = await client.authorize(handle);
       redirect(303, url);
-    }
-    catch (err) {
+    } catch (err) {
       //redirects are errors, so this passes it along
-      if (isRedirect(err)) throw err;
+      if (isRedirect(err)) {
+        throw err;
+      }
 
       const errorMessage = (err as Error).message;
       logger.error(errorMessage);

@@ -65,7 +65,9 @@
 	}
 
 	async function search(q: string) {
-		if (currentAbort) currentAbort.abort();
+		if (currentAbort) {
+			currentAbort.abort();
+		}
 		currentAbort = new AbortController();
 		const controller = currentAbort;
 
@@ -79,20 +81,28 @@
 			url.searchParams.set('limit', String(RESULT_LIMIT));
 
 			const res = await fetch(url, { signal: controller.signal });
-			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			if (!res.ok) {
+				throw new Error(`HTTP ${res.status}`);
+			}
 			const data: TypeaheadResponse = await res.json();
 
-			if (controller.signal.aborted) return;
+			if (controller.signal.aborted) {
+				return;
+			}
 			suggestions = data.actors ?? [];
 			focusIndex = -1;
 			open = true;
 		} catch (e) {
-			if (e instanceof DOMException && e.name === 'AbortError') return;
+			if (e instanceof DOMException && e.name === 'AbortError') {
+				return;
+			}
 			fetchError = e instanceof Error ? e.message : 'Failed to load suggestions';
 			suggestions = [];
 		} finally {
 			clearTimeout(timer);
-			if (controller === currentAbort) loading = false;
+			if (controller === currentAbort) {
+				loading = false;
+			}
 		}
 	}
 
@@ -100,7 +110,9 @@
 		value = (ev.target as HTMLInputElement).value;
 		fetchError = null;
 
-		if (debounceTimer) clearTimeout(debounceTimer);
+		if (debounceTimer) {
+			clearTimeout(debounceTimer);
+		}
 		if (currentAbort) {
 			currentAbort.abort();
 			currentAbort = null;
@@ -122,7 +134,9 @@
 	}
 
 	function onFocus() {
-		if (showingRecent && recent.length > 0) open = true;
+		if (showingRecent && recent.length > 0) {
+			open = true;
+		}
 	}
 
 	function select(actor: ActorSuggestion) {
@@ -133,7 +147,9 @@
 	}
 
 	function onKeydown(ev: KeyboardEvent) {
-		if (!open || items.length === 0) return;
+		if (!open || items.length === 0) {
+			return;
+		}
 
 		if (ev.key === 'ArrowDown') {
 			ev.preventDefault();

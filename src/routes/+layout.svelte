@@ -2,6 +2,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	let { children, data } = $props();
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 </script>
 
 <style>
@@ -53,7 +54,7 @@
 				</form>
 			</li>
 			<li>
-				<a href="/">Home</a>
+				<a href={resolve('/')}>Home</a>
 			</li>
 		</ol>
 	</nav>

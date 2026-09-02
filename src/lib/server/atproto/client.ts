@@ -13,9 +13,13 @@ import type { OAuthClientMetadataInput } from '@atproto/oauth-types';
 const DEFAULT_SCOPES = 'atproto repo:app.bsky.feed.post?action=create repo:xyz.atpoke.graph.poke';
 const loadJwk = async () => {
     const raw = env.OAUTH_JWK;
-    if (!raw) return undefined;
+    if (!raw) {
+        return undefined;
+    }
     const json = JSON.parse(raw);
-    if (!json) return undefined;
+    if (!json) {
+        return undefined;
+    }
     const keys = await Promise.all(
         json.map((jwk: string | Record<string, unknown>) => JoseKey.fromJWK(jwk)),
     );

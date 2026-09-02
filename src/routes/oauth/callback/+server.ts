@@ -22,7 +22,9 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
 
     }catch (err){
         //redirects are errors, so this passes it along
-        if (isRedirect(err)) throw err;
+        if (isRedirect(err)) {
+            throw err;
+        }
 
         const errorMessage = (err as Error).message;
         logger.error(`Error on oauth callback: ${errorMessage}`);
