@@ -1,8 +1,13 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { resolve } from '$app/paths';
+	import Button from '$lib/components/Button.svelte';
 	let { data }: PageProps = $props();
 </script>
+
+{#snippet playIcon()}
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></svg>
+{/snippet}
 
 <section class="hero">
 	<h1>atkuzu</h1>
@@ -10,10 +15,11 @@
 		A game built on the <a href="https://atproto.com">AT Protocol</a>. Your data lives in your
 		own PDS, this is just the client.
 	</p>
+	<Button href={resolve('/play')} icon={playIcon}>Play</Button>
 	{#if data.session}
 		<p class="logged-in">Logged in as <strong>{data.session.handle}</strong>.</p>
 	{:else}
-		<a class="button" href={resolve('/login')}>Login to play</a>
+		<p class="logged-in"><a href={resolve('/login')}>Login</a> to save your results.</p>
 	{/if}
 </section>
 
@@ -28,6 +34,7 @@
 	}
 
 	.logged-in {
+		margin-block-start: var(--space-4);
 		color: var(--muted);
 	}
 </style>

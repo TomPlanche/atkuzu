@@ -2,6 +2,7 @@
 	import type { PageProps } from './$types';
 	import { enhance } from '$app/forms';
 	import HandleInput from '$lib/components/HandleInput.svelte';
+	import Button from '$lib/components/Button.svelte';
 
 	let { form }: PageProps = $props();
 
@@ -16,7 +17,7 @@
 		<label for="handle">Handle</label>
 		<div class="login-form">
 			<HandleInput bind:value={handle} id="handle" required placeholder="jcsalterego.bsky.social" />
-			<button class="login-button" type="submit">Continue</button>
+			<Button type="submit">Continue</Button>
 		</div>
 		{#if form?.error}
 			<p class="error">{form.error}</p>
@@ -57,12 +58,12 @@
 		flex: 1;
 	}
 
-	.login-button {
+	.login-form :global(.btn) {
 		flex-shrink: 0;
 	}
 
 	.error {
 		margin: 0;
-		color: var(--rust-orange);
+		color: var(--danger);
 	}
 </style>
