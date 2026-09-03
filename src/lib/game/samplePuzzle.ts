@@ -1,6 +1,6 @@
 // A single 6x6 puzzle, captured from `cargo run --release` in
-// takuzu-grid-factory. Placeholder fixture while the generator isn't wired
-// into the app yet — swap for a real "puzzle of the day" feed later.
+// takuzu-grid-factory. This is a placeholder fixture. Swap it for a real
+// "puzzle of the day" feed once the generator is wired into the app.
 
 export const SIZE = 6;
 
