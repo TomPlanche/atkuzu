@@ -325,6 +325,6 @@
 	}
 
 	.error {
-		color: var(--rust-orange);
+		color: var(--danger);
 	}
 </style>

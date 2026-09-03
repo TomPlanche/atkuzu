@@ -4,7 +4,7 @@ body {
 	min-height: 100vh;
 	background:
 		radial-gradient(60rem 30rem at 15% -10%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 60%),
-		radial-gradient(50rem 30rem at 100% 0%, color-mix(in oklab, var(--zed-blue) 12%, transparent), transparent 60%),
+		radial-gradient(50rem 30rem at 100% 0%, color-mix(in oklab, var(--accent-secondary) 16%, transparent), transparent 60%),
 		var(--bg);
 	background-attachment: fixed;
 	color: var(--fg);
@@ -36,73 +36,37 @@ p {
 }
 
 a {
-	color: var(--accent);
+	color: var(--zed-blue-text);
 	transition: color var(--transition-fast);
 }
 
 a:hover {
-	color: var(--accent-hover);
+	color: var(--zed-blue-text);
+	text-decoration: underline;
 }
 
 a:focus-visible {
-	outline: 2px solid var(--accent);
+	outline: 2px solid var(--zed-blue-text);
 	outline-offset: 2px;
 	border-radius: 2px;
 }
 
 .container {
+	width: 100%;
 	max-width: var(--container-width);
 	margin-inline: auto;
 	padding-inline: var(--space-6);
 }
 
-button,
-.button {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: var(--space-2);
+// Baseline for any bare <button> — real buttons should use $lib/components/Button.svelte.
+button {
 	font: inherit;
-	font-weight: 600;
 	cursor: pointer;
-	padding: 0.6em 1.2em;
-	border-radius: var(--radius-full);
-	border: 1px solid transparent;
-	background: var(--accent);
-	color: var(--accent-contrast);
-	transition:
-		transform var(--transition-fast),
-		background var(--transition-fast),
-		box-shadow var(--transition-fast);
-}
-
-button:hover,
-.button:hover,
-.button:focus-visible {
-	background: var(--accent-hover);
-	color: var(--accent-contrast);
-}
-
-button:active,
-.button:active {
-	transform: scale(0.97);
 }
 
 button:focus-visible {
-	outline: 2px solid var(--fg);
+	outline: 2px solid var(--accent);
 	outline-offset: 2px;
-}
-
-.button--ghost {
-	background: transparent;
-	color: var(--fg);
-	border-color: var(--border);
-}
-
-.button--ghost:hover,
-.button--ghost:focus-visible {
-	background: var(--surface-hover);
-	color: var(--fg);
 }
 
 input,
@@ -129,3 +93,6 @@ input::placeholder,
 textarea::placeholder {
 	color: var(--muted);
 }
+/* fsevents direct test */
+/* polling fix test */
+/* after warm load test */

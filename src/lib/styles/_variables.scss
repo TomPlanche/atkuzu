@@ -9,6 +9,7 @@
 	--rust-silver: #67737a;
 
 	--zed-blue: #1348dc;
+	--zed-blue-hover: #0640ac;
 	--zed-blue-text: oklch(80.9% 0.105 251.813);
 	--zed-dark: #121316;
 
@@ -17,9 +18,11 @@
 	--fg: var(--zed-blue-text);
 	--muted: color-mix(in oklab, var(--fg) 55%, transparent);
 	--border: color-mix(in oklab, var(--rust-silver) 45%, transparent);
-	--accent: var(--rust-orange);
-	--accent-hover: color-mix(in oklab, var(--rust-orange) 85%, white);
-	--accent-contrast: var(--zed-dark);
+	--accent: var(--zed-blue);
+	--accent-hover: var(--zed-blue-hover);
+	--accent-contrast: #f5f7ff;
+	--accent-secondary: var(--rust-blue);
+	--danger: #ef4444;
 	--surface: color-mix(in oklab, var(--bg) 88%, var(--fg));
 	--surface-hover: color-mix(in oklab, var(--bg) 80%, var(--fg));
 
