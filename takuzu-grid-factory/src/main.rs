@@ -14,7 +14,7 @@ use takuzu::{MAX_SIZE, MIN_SIZE, Takuzu};
 #[derive(Parser)]
 #[command(version, about = "Generates a Takuzu / Binairo puzzle and its solution")]
 struct Args {
-    /// Side length of the grid: 6, 8 or 10
+    /// Side length of the grid: an even number from 6 to 16
     #[arg(short = 'n', long, default_value_t = 6, value_parser = parse_size)]
     size: usize,
 

@@ -2,31 +2,34 @@
 //!
 //! Representation: a row is a `u16` bitmask (bit `c` is the cell at column `c`) and a grid is `size` rows, so every
 //! rule is checked on whole rows with bit tricks. The size is a runtime value carried by [`Takuzu`], not a constant.
-//! Supported sizes are 6, 8 and 10; the row type holds up to 16 columns, so widening the range later only means
-//! raising [`MAX_SIZE`].
+//! Supported sizes are the even numbers from 6 to 16, the widest row a `u16` holds.
 //!
-//! Nothing is precomputed beyond the list of legal rows. The number of complete grids explodes with the size (11,222
-//! for 6x6 without the uniqueness rule, orders of magnitude more beyond), so a grid is built by randomised
-//! backtracking and a puzzle is validated with a solver capped at two solutions.
+//! Nothing is precomputed beyond the list of legal rows, which serves as a size statistic. The number of complete
+//! grids explodes with the size (11,222 for 6x6 without the uniqueness rule, orders of magnitude more beyond), so one
+//! search builds the grid and the same search, capped at two solutions, validates the puzzle. Its top levels run on
+//! the rayon pool.
 
-use rand::{Rng, seq::SliceRandom};
+use rand::{Rng, RngExt, seq::SliceRandom};
 use std::fmt;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Smallest supported grid size.
 pub const MIN_SIZE: usize = 6;
 
-/// Largest supported grid size. A [`Row`] could hold 16 columns, but 12x12 and beyond make digging slow enough to
-/// deserve its own work.
-pub const MAX_SIZE: usize = 10;
+/// Largest supported grid size: a whole row must fit in a [`Row`].
+pub const MAX_SIZE: usize = 16;
 
 /// One row of a grid: bit `c` holds the cell at column `c`.
 pub type Row = u16;
 
-/// Number of 1s already placed per column, indexed by column.
-type Counts = [u8; MAX_SIZE];
-
 /// Cell value standing for "not decided yet" while solving.
 const UNKNOWN: u8 = 2;
+
+/// Depth under which the search splits its two branches across the rayon pool.
+///
+/// The tree is very uneven, so a shallow cut leaves one thread with most of the work. Measured on a 16x16 dig, 3 gives
+/// 26 s, 5 gives 16 s, 11 gives 9 s, and the curve flattens around 20. Small grids never go that deep.
+const PARALLEL_DEPTH: usize = 20;
 
 /// Rejected grid size, with the offending value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -135,90 +138,48 @@ impl Takuzu {
             })
     }
 
-    /// Can `row` sit at depth `k`? Returns the updated column counts when it can.
-    fn fits(&self, grid: &[Row], k: usize, row: Row, ones: Counts) -> Option<Counts> {
-        // "all rows are different" rule
-        if self.distinct_lines && grid[..k].contains(&row) {
+    /// Builds one complete grid, drawing the value of each branching cell from `rng`.
+    ///
+    /// The same seed always yields the same grid. The search is the solver of [`Self::count_solutions`] stopped on its
+    /// first solution: stacking legal rows instead looks simpler, but it backtracks so much past 12x12 that building a
+    /// single 14x14 grid took seconds.
+    ///
+    /// Returns `None` only if the rules admit no grid at all, which cannot happen for the supported sizes.
+    #[must_use]
+    pub fn generate<R: Rng + ?Sized>(&self, rng: &mut R) -> Option<Vec<Row>> {
+        // One value preference per cell: the search tries that value first, which is where the randomness comes from.
+        let cells = self.size * self.size;
+        let first: Vec<u8> = (0..cells).map(|_| u8::from(rng.random_bool(0.5))).collect();
+        let board = self.build(&vec![UNKNOWN; cells], &first)?;
+
+        Some(
+            (0..self.size)
+                .map(|r| (0..self.size).fold(0, |acc, c| acc | (Row::from(board[r * self.size + c]) << c)))
+                .collect(),
+        )
+    }
+
+    /// Depth-first search for the first complete board, trying `first[cell]` before the other value.
+    fn build(&self, board: &[u8], first: &[u8]) -> Option<Vec<u8>> {
+        let mut board = board.to_vec();
+
+        if !self.propagate(&mut board) {
             return None;
         }
 
-        // no three identical cells vertically
-        if k >= 2 {
-            let three_ones = grid[k - 1] & grid[k - 2] & row;
-            let three_zeros = !grid[k - 1] & !grid[k - 2] & !row & self.full;
+        let Some(cell) = self.most_constrained_cell(&board) else {
+            return Some(board);
+        };
 
-            if three_ones | three_zeros != 0 {
-                return None;
+        for value in [first[cell], 1 - first[cell]] {
+            board[cell] = value;
+
+            if let Some(complete) = self.build(&board, first) {
+                return Some(complete);
             }
         }
 
-        // at most `half` 0s and `half` 1s per column
-        let mut next = ones;
-        let placed = u8::try_from(k + 1).expect("k < size, and size <= MAX_SIZE");
-
-        for (c, count) in next.iter_mut().enumerate().take(self.size) {
-            *count += u8::from((row >> c) & 1 == 1);
-
-            if *count > self.half || placed - *count > self.half {
-                return None;
-            }
-        }
-
-        Some(next)
-    }
-
-    /// The "all columns are different" rule, checkable only once the grid is complete.
-    fn columns_distinct(&self, grid: &[Row]) -> bool {
-        let cols: Vec<Row> = (0..self.size)
-            .map(|c| (0..self.size).fold(0, |a, r| a | (((grid[r] >> c) & 1) << r)))
-            .collect();
-
-        (0..self.size).all(|i| (i + 1..self.size).all(|j| cols[i] != cols[j]))
-    }
-
-    /// A complete grid is valid once its last row passes [`Self::fits`] and its columns are distinct.
-    fn is_complete_grid(&self, grid: &[Row]) -> bool {
-        !self.distinct_lines || self.columns_distinct(grid)
-    }
-
-    /// Builds one complete grid, drawing rows in an order derived from `rng`.
-    ///
-    /// The same seed always yields the same grid. Returns `None` only if the rules admit no grid at all, which cannot
-    /// happen for the supported sizes.
-    #[must_use]
-    pub fn generate<R: Rng + ?Sized>(&self, rng: &mut R) -> Option<Vec<Row>> {
-        // One shuffled candidate order per depth: enough to make the whole search random, allocated once.
-        let orders: Vec<Vec<Row>> = (0..self.size)
-            .map(|_| {
-                let mut order = self.rows.clone();
-                order.shuffle(rng);
-
-                order
-            })
-            .collect();
-
-        let mut grid = vec![0; self.size];
-
-        self.build(0, &mut grid, [0; MAX_SIZE], &orders).then_some(grid)
-    }
-
-    /// Depth-first search for the first complete grid, following `orders`.
-    fn build(&self, k: usize, grid: &mut Vec<Row>, ones: Counts, orders: &[Vec<Row>]) -> bool {
-        if k == self.size {
-            return self.is_complete_grid(grid);
-        }
-
-        for &row in &orders[k] {
-            if let Some(next) = self.fits(grid, k, row, ones) {
-                grid[k] = row;
-
-                if self.build(k + 1, grid, next, orders) {
-                    return true;
-                }
-            }
-        }
-
-        false
+        None
     }
 
     /// Number of grids matching `puzzle`, stopping at `cap`.
@@ -230,6 +191,10 @@ impl Takuzu {
     /// 0s) until nothing moves, then branches on the most constrained cell left. Enumerating legal rows would be
     /// shorter to write, but its cost explodes past 10x10, and proving that a nearly minimal puzzle has a single
     /// solution is exactly what [`Self::dig`] asks for on every cell.
+    ///
+    /// The top of that search runs on the rayon pool, which is what makes 14x14 and 16x16 practical. The result does
+    /// not depend on the thread count: the counter is atomic and the cap only clamps the returned value, so a given
+    /// seed always yields the same puzzle.
     #[must_use]
     pub fn count_solutions(&self, puzzle: &Puzzle, cap: usize) -> usize {
         let mut board = vec![UNKNOWN; self.size * self.size];
@@ -242,11 +207,12 @@ impl Takuzu {
             }
         }
 
-        let mut found = 0;
+        let found = AtomicUsize::new(0);
 
-        self.count(&board, cap, &mut found);
+        self.count(&board, cap, &found, 0);
 
-        found
+        // Threads racing past the cap may overshoot it, so the caller still sees exactly what a single thread counts.
+        found.load(Ordering::Relaxed).min(cap)
     }
 
     /// Cell `i` of `line`, where lines are the `size` rows followed by the `size` columns.
@@ -259,8 +225,12 @@ impl Takuzu {
     }
 
     /// Depth-first count of the boards completing `board`, stopping once `found` reaches `cap`.
-    fn count(&self, board: &[u8], cap: usize, found: &mut usize) {
-        if *found >= cap {
+    ///
+    /// The two branches of a cell run in parallel while `depth` stays under [`PARALLEL_DEPTH`], which splits the tree
+    /// into at most 2^[`PARALLEL_DEPTH`] tasks for the rayon pool to steal from. Deeper nodes stay sequential, where
+    /// the work no longer pays for a task.
+    fn count(&self, board: &[u8], cap: usize, found: &AtomicUsize, depth: usize) {
+        if found.load(Ordering::Relaxed) >= cap {
             return;
         }
 
@@ -271,19 +241,28 @@ impl Takuzu {
         }
 
         let Some(cell) = self.most_constrained_cell(&board) else {
-            *found += usize::from(self.lines_distinct(&board));
+            found.fetch_add(1, Ordering::Relaxed);
 
             return;
         };
 
-        for value in [0, 1] {
-            board[cell] = value;
+        let mut zero = board.clone();
+        zero[cell] = 0;
+        board[cell] = 1;
 
-            self.count(&board, cap, found);
+        if depth < PARALLEL_DEPTH {
+            rayon::join(
+                || self.count(&zero, cap, found, depth + 1),
+                || self.count(&board, cap, found, depth + 1),
+            );
 
-            if *found >= cap {
-                return;
-            }
+            return;
+        }
+
+        self.count(&zero, cap, found, depth + 1);
+
+        if found.load(Ordering::Relaxed) < cap {
+            self.count(&board, cap, found, depth + 1);
         }
     }
 
@@ -301,7 +280,7 @@ impl Takuzu {
             }
         }
 
-        true
+        !self.duplicate_lines(board)
     }
 
     /// Applies the "no three identical cells" rule and the balance rule to one line.
@@ -393,18 +372,38 @@ impl Takuzu {
             .min_by_key(|&cell| holes[cell / self.size] + holes[self.size + cell % self.size])
     }
 
-    /// The "all rows and all columns are different" rule, checkable only on a complete board.
-    fn lines_distinct(&self, board: &[u8]) -> bool {
+    /// Reports whether two complete lines of the same kind hold the same values, which the third rule forbids.
+    ///
+    /// Checking this on every node, and not only on a finished board, is what keeps the search from thrashing: a
+    /// duplicate row found at the leaf sends the search back to a branch that rebuilds almost the same board.
+    fn duplicate_lines(&self, board: &[u8]) -> bool {
         if !self.distinct_lines {
-            return true;
+            return false;
         }
 
-        let lines: Vec<Row> = (0..2 * self.size)
-            .map(|line| (0..self.size).fold(0, |acc, i| acc | (Row::from(board[self.line_cell(line, i)]) << i)))
-            .collect();
+        let mut values = [0; 2 * MAX_SIZE];
+        let mut complete = [false; 2 * MAX_SIZE];
 
-        (0..self.size).all(|i| (i + 1..self.size).all(|j| lines[i] != lines[j]))
-            && (self.size..2 * self.size).all(|i| (i + 1..2 * self.size).all(|j| lines[i] != lines[j]))
+        for line in 0..2 * self.size {
+            let cells = (0..self.size).map(|i| board[self.line_cell(line, i)]);
+
+            complete[line] = true;
+
+            for (i, cell) in cells.enumerate() {
+                if cell == UNKNOWN {
+                    complete[line] = false;
+
+                    break;
+                }
+
+                values[line] |= Row::from(cell) << i;
+            }
+        }
+
+        let same = |i: usize, j: usize| complete[i] && complete[j] && values[i] == values[j];
+
+        (0..self.size).any(|i| (i + 1..self.size).any(|j| same(i, j)))
+            || (self.size..2 * self.size).any(|i| (i + 1..2 * self.size).any(|j| same(i, j)))
     }
 
     /// Every cell revealed: the starting point of [`Self::dig`].
@@ -524,6 +523,9 @@ mod tests {
         assert_eq!(rules(6).rows().len(), 14);
         assert_eq!(rules(8).rows().len(), 34);
         assert_eq!(rules(10).rows().len(), 84);
+        assert_eq!(rules(12).rows().len(), 208);
+        assert_eq!(rules(14).rows().len(), 518);
+        assert_eq!(rules(16).rows().len(), 1296);
     }
 
     /// The reference numbers of complete 6x6 grids, as counted by the previous exhaustive enumeration.
@@ -538,7 +540,7 @@ mod tests {
 
     #[test]
     fn generates_valid_grids() {
-        for size in [6, 8, 10] {
+        for size in [6, 8, 10, 12, 14, 16] {
             let takuzu = rules(size);
             let mut rng = ChaCha8Rng::seed_from_u64(u64::try_from(size).unwrap());
             let grid = takuzu.generate(&mut rng).expect("a grid exists");
