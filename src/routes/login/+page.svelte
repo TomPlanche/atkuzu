@@ -8,28 +8,61 @@
 	let handle = $state('');
 </script>
 
+<section class="login-card">
+	<h1>Login</h1>
+	<p class="subtitle">Sign in with your AT Protocol handle.</p>
+
+	<form action="/login" method="POST" use:enhance>
+		<label for="handle">Handle</label>
+		<div class="login-form">
+			<HandleInput bind:value={handle} id="handle" required placeholder="jcsalterego.bsky.social" />
+			<button class="login-button" type="submit">Continue</button>
+		</div>
+		{#if form?.error}
+			<p class="error">{form.error}</p>
+		{/if}
+	</form>
+</section>
+
 <style>
+	.login-card {
+		max-width: 28rem;
+		margin-inline: auto;
+		padding-block: var(--space-12);
+	}
+
+	.subtitle {
+		color: var(--muted);
+	}
+
+	form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	label {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--muted);
+	}
+
 	.login-form {
 		display: flex;
-		flex-direction: row;
-		align-items: center;
+		align-items: flex-start;
+		gap: var(--space-2);
+	}
+
+	.login-form :global(.handle-input) {
+		flex: 1;
 	}
 
 	.login-button {
-		align-self: start;
+		flex-shrink: 0;
+	}
+
+	.error {
+		margin: 0;
+		color: var(--rust-orange);
 	}
 </style>
-
-<h1>ATProtocol OAuth Login</h1>
-
-<form action="/login" method="POST" use:enhance>
-	<label for="handle">ATProtocol Handle</label>
-	<div class="login-form">
-		<HandleInput bind:value={handle} id="handle" required placeholder="jcsalterego.bsky.social" />
-		<button class="login-button" type="submit">Submit</button>
-	</div>
-	<br />
-	{#if form?.error}
-		<p>{form.error}</p>
-	{/if}
-</form>
