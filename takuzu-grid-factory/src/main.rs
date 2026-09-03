@@ -1,174 +1,71 @@
-//! Takuzu / Binairo 6x6: exhaustive enumeration + puzzle generation.
+//! Takuzu / Binairo puzzle generator.
 //!
-//! Guiding idea: the space of complete 6x6 grids is tiny:
-//! 11,222 without the row/column uniqueness rule, 4,140 with it.
-//! So everything can be precomputed, no solver needed.
-//!
-//! Representation: a row = 6 bits (u8), a grid = 6 rows ([u8; 6]) or 36 bits packed into a u64 (bit 6*r + c).
+//! Both the grid size and the random seed come from the command line, so a run is reproducible: the same seed and the
+//! same size always print the same puzzle and the same clues. See [`takuzu`] for the rules and the search itself.
 
-const N: usize = 6;
-const FULL: u8 = 0b11_1111;
+mod takuzu;
 
-/// The 14 legal rows: 3 zeros, 3 ones, no triplet.
-#[must_use]
-pub fn valid_rows() -> Vec<u8> {
-    (0u8..=FULL)
-        .filter(|&r| {
-            r.count_ones() == 3
-                && (0..=3).all(|i| {
-                    let w = (r >> i) & 0b111; // the 3-bit window at position i
+use clap::Parser;
+use rand::{RngExt, SeedableRng};
+use rand_chacha::ChaCha8Rng;
+use std::process::ExitCode;
+use takuzu::{MAX_SIZE, MIN_SIZE, Takuzu};
 
-                    w != 0 && w != 0b111 // the window must not be all 0s or all 1s
-                })
-        })
-        .collect()
+#[derive(Parser)]
+#[command(version, about = "Generates a Takuzu / Binairo puzzle and its solution")]
+struct Args {
+    /// Side length of the grid: 6, 8 or 10
+    #[arg(short = 'n', long, default_value_t = 6, value_parser = parse_size)]
+    size: usize,
+
+    /// Seed of the generator; the same seed always gives the same puzzle. A random one is drawn when omitted, and
+    /// printed so the run can be replayed
+    #[arg(short, long)]
+    seed: Option<u64>,
+
+    /// Drop the "all rows and all columns are different" rule
+    #[arg(long)]
+    allow_duplicate_lines: bool,
 }
 
-///
-/// Recursively generates all valid grids of size `k` x `k`.
-///
-/// `g` is the current grid being built, `cnt` tracks the number of 1s already placed per column,
-/// `rows` is the list of valid rows, `distinct` indicates whether the grid must have distinct rows/columns,
-/// and `out` is the list of valid grids.
-fn go(
-    k: usize,
-    g: &mut [u8; N],
-    cnt: [u8; N], // number of 1s already placed per column
-    rows: &[u8],
-    distinct: bool,
-    out: &mut Vec<[u8; N]>,
-) {
-    if k == N {
-        if distinct {
-            let cols: [u8; N] = core::array::from_fn(|c| (0..N).fold(0u8, |a, r| a | (((g[r] >> c) & 1) << r)));
+/// Rejects unusable sizes while parsing, so the error reads like any other clap error.
+fn parse_size(raw: &str) -> Result<usize, String> {
+    let size: usize = raw
+        .parse()
+        .map_err(|_| format!("`{raw}` is not a number between {MIN_SIZE} and {MAX_SIZE}"))?;
 
-            for i in 0..N {
-                for j in i + 1..N {
-                    if cols[i] == cols[j] {
-                        return;
-                    }
-                }
-            }
-        }
-
-        out.push(*g);
-
-        return;
-    }
-
-    'next: for &r in rows {
-        // "all rows distinct" rule
-        if distinct && g[..k].contains(&r) {
-            continue;
-        }
-
-        // no three identical cells vertically
-        if k >= 2 {
-            let ones3 = g[k - 1] & g[k - 2] & r;
-            let zeros3 = !g[k - 1] & !g[k - 2] & !r & FULL;
-
-            if ones3 | zeros3 != 0 {
-                continue;
-            }
-        }
-
-        // at most three 0s and three 1s per column
-        let mut nc = cnt;
-        let placed = u8::try_from(k + 1).expect("k < N, so k + 1 fits in a u8");
-
-        for (c, ones) in nc.iter_mut().enumerate() {
-            *ones += (r >> c) & 1;
-
-            if *ones > 3 || placed - *ones > 3 {
-                continue 'next;
-            }
-        }
-
-        g[k] = r;
-
-        go(k + 1, g, nc, rows, distinct, out);
-    }
+    Takuzu::check_size(size).map_err(|err| err.to_string())
 }
 
-/// All valid complete grids. `distinct` enables the "all rows and all columns are different" rule.
-#[must_use]
-pub fn all_grids(distinct: bool) -> Vec<[u8; N]> {
-    let rows = valid_rows();
-    let mut out = Vec::new();
+fn main() -> ExitCode {
+    let args = Args::parse();
+    let takuzu = match Takuzu::new(args.size, !args.allow_duplicate_lines) {
+        Ok(takuzu) => takuzu,
+        Err(err) => {
+            eprintln!("error: {err}");
 
-    go(0, &mut [0u8; N], [0u8; N], &rows, distinct, &mut out);
+            return ExitCode::FAILURE;
+        },
+    };
 
-    out
-}
+    let seed = args.seed.unwrap_or_else(|| rand::rng().random());
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
 
-/// Grid -> 36 bits.
-#[must_use]
-pub fn pack(g: &[u8; N]) -> u64 {
-    (0..N).fold(0u64, |a, r| a | (u64::from(g[r]) << (6 * r)))
-}
+    let Some(solution) = takuzu.generate(&mut rng) else {
+        eprintln!("error: no {0}x{0} grid satisfies the rules", takuzu.size());
 
-/// Number of solutions to a puzzle (mask of revealed cells + values), capped at `cap`. With the full table, no solver
-/// is needed.
-#[must_use]
-pub fn count_solutions(table: &[u64], mask: u64, given: u64, cap: usize) -> usize {
-    let mut n = 0;
+        return ExitCode::FAILURE;
+    };
 
-    for &s in table {
-        if s & mask == given {
-            n += 1;
+    let puzzle = takuzu.dig(&solution, &mut rng);
+    let cells = takuzu.size() * takuzu.size();
 
-            if n == cap {
-                break;
-            }
-        }
-    }
-    n
-}
+    println!("size  : {0}x{0}", takuzu.size());
+    println!("rows  : {} legal", takuzu.rows().len());
+    println!("seed  : {seed}");
+    println!("clues : {}/{cells}", puzzle.clues());
+    println!("\npuzzle\n{}", takuzu.render_puzzle(&puzzle));
+    println!("\nsolution\n{}", takuzu.render_grid(&solution));
 
-/// Greedy digging: starts from a full grid and removes cells as long as solution uniqueness is preserved. The result is
-/// minimal in the inclusion sense (no clue can be removed).
-#[must_use]
-pub fn dig(table: &[u64], sol: u64, order: &[u8]) -> u64 {
-    let mut mask = (1u64 << 36) - 1;
-
-    for &c in order {
-        let cand = mask & !(1 << c);
-
-        if count_solutions(table, cand, sol & cand, 2) == 1 {
-            mask = cand;
-        }
-    }
-
-    mask
-}
-
-fn main() {
-    println!("legal rows              : {}", valid_rows().len());
-    println!("grids (no uniqueness)   : {}", all_grids(false).len());
-
-    let table: Vec<u64> = all_grids(true).iter().map(pack).collect();
-    println!("grids (with uniqueness) : {}", table.len());
-    println!("table size              : {} bytes", table.len() * 8);
-
-    // Example dig with a fixed order (to be replaced with a shuffle).
-    let sol = table[0];
-    let order: Vec<u8> = (0..36).rev().collect();
-    let mask = dig(&table, sol, &order);
-    println!("clues left              : {}", mask.count_ones());
-
-    for r in 0..N {
-        let line: String = (0..N)
-            .map(|c| {
-                let b = 6 * r + c;
-                if mask >> b & 1 == 0 {
-                    '.'
-                } else if sol >> b & 1 == 1 {
-                    '1'
-                } else {
-                    '0'
-                }
-            })
-            .collect();
-        println!("{line}");
-    }
+    ExitCode::SUCCESS
 }
