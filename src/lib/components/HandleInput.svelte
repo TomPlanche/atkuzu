@@ -178,98 +178,6 @@
 
 <svelte:window onclick={onWindowClick} />
 
-<style>
-	.handle-input {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-	}
-
-	.dropdown {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		z-index: 10;
-		margin: 2px 0 0;
-		padding: 4px;
-		list-style: none;
-		background: white;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		max-height: 260px;
-		overflow-y: auto;
-	}
-
-	.dropdown-header {
-		padding: 4px 8px;
-		font-size: 0.75rem;
-		color: #888;
-		text-transform: uppercase;
-	}
-
-	.item {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 6px 8px;
-		border-radius: 3px;
-		cursor: pointer;
-	}
-
-	.item.focused,
-	.item:hover {
-		background: #f0f0f0;
-	}
-
-	.avatar {
-		width: 28px;
-		height: 28px;
-		border-radius: 50%;
-		overflow: hidden;
-		flex-shrink: 0;
-		background: #ddd;
-	}
-
-	.avatar img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-
-	.text {
-		display: flex;
-		flex-direction: column;
-		line-height: 1.2;
-		overflow: hidden;
-	}
-
-	.name {
-		font-weight: 600;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.at-handle {
-		color: #666;
-		font-size: 0.85rem;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.status {
-		margin: 2px 0 0;
-		font-size: 0.85rem;
-	}
-
-	.error {
-		color: red;
-	}
-</style>
-
 <div class="handle-input" bind:this={container}>
 	<input
 		type="text"
@@ -328,3 +236,95 @@
 		<p class="status error">{fetchError}</p>
 	{/if}
 </div>
+
+<style>
+	.handle-input {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+	}
+
+	.dropdown {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		z-index: 10;
+		margin: 2px 0 0;
+		padding: 4px;
+		list-style: none;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		max-height: 260px;
+		overflow-y: auto;
+	}
+
+	.dropdown-header {
+		padding: 4px 8px;
+		font-size: 0.75rem;
+		color: var(--muted);
+		text-transform: uppercase;
+	}
+
+	.item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 8px;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+	}
+
+	.item.focused,
+	.item:hover {
+		background: color-mix(in oklab, var(--surface) 70%, var(--fg));
+	}
+
+	.avatar {
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		overflow: hidden;
+		flex-shrink: 0;
+		background: var(--border);
+	}
+
+	.avatar img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.text {
+		display: flex;
+		flex-direction: column;
+		line-height: 1.2;
+		overflow: hidden;
+	}
+
+	.name {
+		font-weight: 600;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.at-handle {
+		color: var(--muted);
+		font-size: 0.85rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.status {
+		margin: 2px 0 0;
+		font-size: 0.85rem;
+	}
+
+	.error {
+		color: var(--rust-orange);
+	}
+</style>
