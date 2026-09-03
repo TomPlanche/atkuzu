@@ -89,6 +89,8 @@
 	}
 
 	.site-footer__inner {
+		display: flex;
+		justify-content: flex-end;
 		padding-block: var(--space-4);
 		font-size: 0.85rem;
 		color: var(--muted);
