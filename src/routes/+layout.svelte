@@ -1,10 +1,11 @@
 <script lang="ts">
 	import '$lib/styles/main.scss';
 	import favicon from '$lib/assets/favicon.svg';
-	let { children, data } = $props();
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import Button from '$lib/components/Button.svelte';
+
+	let { children, data } = $props();
 </script>
 
 {#snippet logoutIcon()}
@@ -54,8 +55,8 @@
 <footer class="site-footer">
 	<div class="container site-footer__inner">
 		<a class="tangled-link" href="https://tangled.org/tomplanche.com/ATKuzu">
+			Source
 			<span class="tangled-link__mark">{@render tangledMark()}</span>
-			Source on tangled.org
 		</a>
 	</div>
 </footer>
