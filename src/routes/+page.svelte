@@ -3,6 +3,7 @@
   import { resolve } from "$app/paths";
   import Button from "$lib/components/Button.svelte";
   import { loginModal } from "$lib/state/login-modal.svelte";
+
   let { data }: PageProps = $props();
 
   // href stays "/login" as a no-JS fallback; see +layout.svelte for the same pattern.
@@ -20,8 +21,10 @@
     stroke="currentColor"
     stroke-width="2"
     stroke-linecap="round"
-    stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3" /></svg
+    stroke-linejoin="round"
   >
+    <polygon points="6 3 20 12 6 21 6 3" />
+  </svg>
 {/snippet}
 
 <section class="hero">
@@ -30,7 +33,7 @@
     A game built on the <a href="https://atproto.com">AT Protocol</a>. Your data lives in your own
     PDS, this is just the client.
   </p>
-  <Button href={resolve("/play")} icon={playIcon}>Play</Button>
+
   {#if data.session}
     <p class="logged-in">Logged in as <strong>{data.session.handle}</strong>.</p>
   {:else}
@@ -38,6 +41,8 @@
       <a href={resolve("/login")} onclick={openLoginModal}>Login</a> to save your results.
     </p>
   {/if}
+
+  <Button href={resolve("/play")} icon={playIcon}>Play</Button>
 </section>
 
 <style lang="scss">
@@ -46,7 +51,6 @@
   }
 
   .tagline {
-    max-width: 32rem;
     color: var(--muted);
   }
 
