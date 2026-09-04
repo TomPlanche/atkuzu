@@ -33,7 +33,7 @@
 </script>
 
 <form action="/login" method="POST" use:enhance={handleSubmit}>
-  <label for="handle">Handle</label>
+  <label class="sr-only" for="handle">Handle</label>
   <div class="login-form">
     <HandleInput bind:value={handle} id="handle" placeholder="yourhandle.bsky.social" required />
 
@@ -51,10 +51,19 @@
     gap: var(--space-4);
   }
 
-  label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--muted);
+  // Kept for accessibility (associates the input with a name for screen readers);
+  // hidden visually since the subtitle above already says "handle" and the
+  // input's placeholder shows the expected format.
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .login-form {
