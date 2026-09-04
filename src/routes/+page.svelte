@@ -2,7 +2,14 @@
   import type { PageProps } from "./$types";
   import { resolve } from "$app/paths";
   import Button from "$lib/components/Button.svelte";
+  import { loginModal } from "$lib/state/login-modal.svelte";
   let { data }: PageProps = $props();
+
+  // href stays "/login" as a no-JS fallback; see +layout.svelte for the same pattern.
+  const openLoginModal = (event: MouseEvent) => {
+    event.preventDefault();
+    loginModal.show();
+  };
 </script>
 
 {#snippet playIcon()}
@@ -27,7 +34,9 @@
   {#if data.session}
     <p class="logged-in">Logged in as <strong>{data.session.handle}</strong>.</p>
   {:else}
-    <p class="logged-in"><a href={resolve("/login")}>Login</a> to save your results.</p>
+    <p class="logged-in">
+      <a href={resolve("/login")} onclick={openLoginModal}>Login</a> to save your results.
+    </p>
   {/if}
 </section>
 
