@@ -17,10 +17,10 @@ Board rendering and rule validation are shared with `/daily` via `$lib/game/boar
   - [ ] Compile `takuzu-grid-factory` to `wasm32-unknown-unknown` and call it from the client.
   - [ ] Pick the puzzle size and the difficulty tiers to generate.
   - [ ] Draw a fresh random seed per attempt. No date or puzzle-number scheme here; that belongs to `/daily`.
-- [ ] Add keyboard support (shared by `/daily` through `Board.svelte`).
-  - [ ] Move focus between cells with the arrow keys.
-  - [ ] Toggle the focused cell with the spacebar.
-  - [ ] Submit the puzzle for validation with enter.
+- [x] Add keyboard support (shared by `/daily` through `Board.svelte`).
+  - [x] Move focus between cells with the arrow keys.
+  - [x] Toggle the focused cell with the spacebar.
+  - [x] Submit the puzzle for validation with enter.
 - [ ] Add theme support (shared by `/daily` through `Board.svelte`).
   - [ ] Let the player pick a symbol set: 0/1, sun/moon, or colors.
   - [ ] Store the choice as a user preference on the PDS.
