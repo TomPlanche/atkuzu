@@ -1,17 +1,14 @@
 <script lang="ts">
   import { PUZZLE, SIZE, SOLUTION } from "$lib/game/samplePuzzle";
+  import { type Cell, cloneGrid, computeInvalid, parseGrid } from "$lib/game/board";
+  import Board from "$lib/components/Board.svelte";
   import Button from "$lib/components/Button.svelte";
 
-  type Cell = 0 | 1 | null;
-
-  const parseRow = (row: string): Cell[] =>
-    row.split("").map((ch) => (ch === "0" ? 0 : ch === "1" ? 1 : null));
-
-  const initialBoard: Cell[][] = PUZZLE.map(parseRow);
+  const initialBoard: Cell[][] = parseGrid(PUZZLE);
   const given: boolean[][] = initialBoard.map((row) => row.map((c) => c !== null));
-  const solution: Cell[][] = SOLUTION.map(parseRow);
+  const solution: Cell[][] = parseGrid(SOLUTION);
 
-  let board = $state<Cell[][]>(initialBoard.map((row) => [...row]));
+  let board = $state<Cell[][]>(cloneGrid(initialBoard));
   let toggleCount = $state(0);
   let elapsedSeconds = $state(0);
 
@@ -20,103 +17,7 @@
     isFull && board.every((row, r) => row.every((c, col) => c === solution[r][col]))
   );
 
-  const getColumn = (b: Cell[][], c: number): Cell[] => b.map((row) => row[c]);
-
-  /**
-   * Live rule check: three in a row, an unbalanced line, or a duplicate line.
-   * Marks every cell that takes part in a broken rule. A duplicate line marks
-   * the whole line. An unbalanced line marks only the cells holding the value
-   * that goes over the limit.
-   *
-   * @param b - The current board state.
-   * @returns A same-shape grid where each `true` cell breaks a rule.
-   */
-  const computeInvalid = (b: Cell[][]): boolean[][] => {
-    const invalid = Array.from({ length: SIZE }, () => Array<boolean>(SIZE).fill(false));
-
-    const mark = (r: number, c: number) => {
-      invalid[r][c] = true;
-    };
-
-    const checkTriples = (line: Cell[], markAt: (i: number) => void) => {
-      for (let i = 0; i < line.length - 2; i++) {
-        const [a, b2, c2] = [line[i], line[i + 1], line[i + 2]];
-
-        if (a !== null && a === b2 && b2 === c2) {
-          markAt(i);
-          markAt(i + 1);
-          markAt(i + 2);
-        }
-      }
-    };
-
-    const checkBalance = (line: Cell[], markAt: (i: number) => void) => {
-      const zeros = line.filter((v) => v === 0).length;
-      const ones = line.filter((v) => v === 1).length;
-
-      const overflowing = zeros > SIZE / 2 ? 0 : ones > SIZE / 2 ? 1 : null;
-      if (overflowing !== null) {
-        line.forEach((v, i) => {
-          if (v === overflowing) {
-            markAt(i);
-          }
-        });
-      }
-    };
-
-    for (let r = 0; r < SIZE; r++) {
-      checkTriples(b[r], (c) => mark(r, c));
-      checkBalance(b[r], (c) => mark(r, c));
-    }
-
-    for (let c = 0; c < SIZE; c++) {
-      const column = getColumn(b, c);
-
-      checkTriples(column, (r) => mark(r, c));
-      checkBalance(column, (r) => mark(r, c));
-    }
-
-    const rowKey = (line: Cell[]) => line.join(",");
-
-    // Duplicate rows
-    for (let i = 0; i < SIZE; i++) {
-      if (!b[i].every((v) => v !== null)) {
-        continue;
-      }
-
-      for (let j = i + 1; j < SIZE; j++) {
-        if (b[j].every((v) => v !== null) && rowKey(b[i]) === rowKey(b[j])) {
-          for (let c = 0; c < SIZE; c++) {
-            mark(i, c);
-            mark(j, c);
-          }
-        }
-      }
-    }
-
-    // Duplicate columns
-    for (let i = 0; i < SIZE; i++) {
-      const colI = getColumn(b, i);
-
-      if (!colI.every((v) => v !== null)) {
-        continue;
-      }
-
-      for (let j = i + 1; j < SIZE; j++) {
-        const colJ = getColumn(b, j);
-        if (colJ.every((v) => v !== null) && rowKey(colI) === rowKey(colJ)) {
-          for (let r = 0; r < SIZE; r++) {
-            mark(r, i);
-            mark(r, j);
-          }
-        }
-      }
-    }
-
-    return invalid;
-  };
-
-  const invalid = $derived(computeInvalid(board));
+  const invalid = $derived(computeInvalid(board, SIZE));
 
   const cycleCell = (r: number, c: number) => {
     if (given[r][c] || isSolved) {
@@ -129,7 +30,7 @@
   };
 
   const resetBoard = () => {
-    board = initialBoard.map((row) => [...row]);
+    board = cloneGrid(initialBoard);
     toggleCount = 0;
     elapsedSeconds = 0;
   };
@@ -137,7 +38,7 @@
   // Dev-only shortcut to skip straight to the win state while working on
   // the board UI. Stripped from production builds by import.meta.env.DEV.
   const resolveNow = () => {
-    board = solution.map((row) => [...row]);
+    board = cloneGrid(solution);
   };
 
   const formatTime = (total: number): string => {
@@ -205,26 +106,7 @@
     </div>
   </div>
 
-  <div class="board-wrap">
-    <div class="board" class:solved={isSolved}>
-      {#each board as row, r (r)}
-        {#each row as cell, c (c)}
-          <button
-            type="button"
-            class="cell"
-            class:given={given[r][c]}
-            class:filled={cell !== null}
-            class:invalid={invalid[r][c]}
-            disabled={given[r][c]}
-            aria-label={`Row ${r + 1}, column ${c + 1}`}
-            onclick={() => cycleCell(r, c)}
-          >
-            {cell === null ? "" : cell}
-          </button>
-        {/each}
-      {/each}
-    </div>
-  </div>
+  <Board size={SIZE} {board} {given} {invalid} solved={isSolved} oncellclick={cycleCell} />
 
   <p aria-hidden={!isSolved} class="solved-banner" class:visible={isSolved}>
     <span class="solved-banner__pill">
@@ -262,87 +144,6 @@
   .stat strong {
     color: white;
     font-family: var(--font-mono);
-  }
-
-  .board-wrap {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .board {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
-    width: 80%;
-    height: auto;
-    max-height: 100%;
-    aspect-ratio: 1;
-
-    &.solved .cell {
-      border-color: var(--accent);
-    }
-  }
-
-  .cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    aspect-ratio: 1;
-    min-width: 0;
-    min-height: 0;
-    padding: 0;
-    background-color: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: white;
-    font-family: var(--font-mono);
-    font-size: clamp(1.25rem, 5vw, 1.75rem);
-    font-weight: 600;
-    cursor: pointer;
-    transition:
-      background var(--transition-fast),
-      border-color var(--transition-fast);
-
-    &:not(.given) {
-      &:hover {
-        background-color: var(--surface-hover);
-      }
-
-      &:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
-    }
-
-    &.filled:not(.given) {
-      border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
-    }
-
-    &.given {
-      background-color: color-mix(in oklab, var(--surface) 55%, white);
-      color: white;
-      cursor: default;
-      opacity: 1;
-    }
-
-    &.invalid {
-      border-color: var(--danger);
-      background-color: var(--surface);
-      background-image: repeating-linear-gradient(
-        45deg,
-        color-mix(in oklab, var(--danger) 70%, black) 0,
-        color-mix(in oklab, var(--danger) 70%, black) 6px,
-        transparent 6px,
-        transparent 12px
-      );
-
-      &.given {
-        background-color: color-mix(in oklab, var(--surface) 55%, white);
-      }
-    }
   }
 
   .solved-banner {

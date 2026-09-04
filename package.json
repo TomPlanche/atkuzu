@@ -22,7 +22,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "lexicons:validate": "tsx scripts/validate-lexicons.ts",
-    "lexicons:publish": "tsx scripts/publish-lexicons.ts"
+    "lexicons:publish": "tsx scripts/publish-lexicons.ts",
+    "daily:generate": "tsx scripts/generate-daily.ts"
   },
   "dependencies": {
     "@atproto/api": "^0.18.6",

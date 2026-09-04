@@ -69,7 +69,10 @@
 
 <header class="site-header">
   <div class="container site-header__inner">
-    <a class="brand" href={resolve("/")}>atkuzu</a>
+    <div class="site-header__left">
+      <a class="brand" href={resolve("/")}>atkuzu</a>
+      <a class="nav-link" href={resolve("/daily")}>Daily</a>
+    </div>
     {#if data.session}
       <nav class="navbar">
         <span class="welcome">{data.session.handle}</span>
@@ -126,11 +129,26 @@
     }
   }
 
+  .site-header__left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+  }
+
   .brand {
     font-weight: 700;
     font-size: 1.1rem;
     letter-spacing: -0.02em;
     color: var(--fg);
+
+    &:hover {
+      color: var(--fg);
+    }
+  }
+
+  .nav-link {
+    font-size: 0.9rem;
+    color: var(--muted);
 
     &:hover {
       color: var(--fg);
