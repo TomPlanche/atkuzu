@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "useTabs": false,
+  "singleQuote": false,
+  "trailingComma": "none",
+  "printWidth": 100,
+  "sortPackageJson": true,
+  "svelte": {},
+  "ignorePatterns": [
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "yarn.lock",
+    ".svelte-kit",
+    "build",
+    "dist",
+    "static",
+    "takuzu-grid-factory"
+  ]
+}

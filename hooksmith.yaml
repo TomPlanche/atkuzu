@@ -1,0 +1,5 @@
+# Git hook configuration for hooksmith: https://github.com/TomPlanche/hooksmith
+pre-commit:
+  commands:
+    - pnpm run format:check
+    - pnpm run lint

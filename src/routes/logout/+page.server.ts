@@ -1,23 +1,23 @@
-import type { Actions } from './$types';
-import { getSessionManager } from '$lib/server/session';
-import { redirect } from '@sveltejs/kit';
-import { atpOAuthClient } from '$lib/server/atproto/client';
+import type { Actions } from "./$types";
+import { getSessionManager } from "$lib/server/session";
+import { redirect } from "@sveltejs/kit";
+import { atpOAuthClient } from "$lib/server/atproto/client";
 
 export const actions: Actions = {
-    default: async (event) => {
-        const token = event.cookies.get('session');
+  default: async (event) => {
+    const token = event.cookies.get("session");
 
-        if (token) {
-            const sessionManager = await getSessionManager();
-            await sessionManager.invalidateSessionByToken(token);
-            sessionManager.deleteSessionTokenCookie(event);
+    if (token) {
+      const sessionManager = await getSessionManager();
+      await sessionManager.invalidateSessionByToken(token);
+      sessionManager.deleteSessionTokenCookie(event);
 
-            const oauthClient = await atpOAuthClient();
-            if(event.locals.session?.did) {
-                await oauthClient.revoke(event.locals.session.did);
-            }
-        }
-
-        redirect(303, '/');
+      const oauthClient = await atpOAuthClient();
+      if (event.locals.session?.did) {
+        await oauthClient.revoke(event.locals.session.did);
+      }
     }
+
+    redirect(303, "/");
+  }
 };

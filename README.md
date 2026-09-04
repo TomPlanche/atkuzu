@@ -106,10 +106,10 @@ There isn't a great way to run a "sidecar process" with SvelteKit — a [Jetstre
 6. Run `railway volume add -m /app_data` to create a persistent volume for the sqlite database.
 7. If you don't already have your project dashboard open, `railway open` opens it in a web browser.
 8. Click on your service, then Variables. Add the following variables:
-   * `OAUTH_DOMAIN` — your domain name
-   * `OAUTH_JWK` — the value from `node ./bin/gen-jwk.js`
-   * `DATABASE_URL` — `/app_data/local.db`
-   ![railway dashboard](.tangled/images/railway-dashboard.png)
+   - `OAUTH_DOMAIN` — your domain name
+   - `OAUTH_JWK` — the value from `node ./bin/gen-jwk.js`
+   - `DATABASE_URL` — `/app_data/local.db`
+     ![railway dashboard](.tangled/images/railway-dashboard.png)
 9. Go to settings and select "Custom Domain" to add your domain name. Follow the directions there.
    ![railway custom domain](.tangled/images/railway-custom-domain.png)
 

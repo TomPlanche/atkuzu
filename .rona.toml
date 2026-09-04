@@ -2,7 +2,20 @@
 editor = "zed"
 
 # Commit types shown in the selector.
-commit_types = ["feat", "fix", "perf", "revert", "docs", "quality", "style", "chore", "refactor", "test", "build", "ci"]
+commit_types = [
+  "feat",
+  "fix",
+  "perf",
+  "revert",
+  "docs",
+  "quality",
+  "style",
+  "chore",
+  "refactor",
+  "test",
+  "build",
+  "ci"
+]
 
 ##########
 # COMMIT #

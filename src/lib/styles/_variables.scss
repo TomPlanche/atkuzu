@@ -1,54 +1,52 @@
 // Same palette as portfolio-v222 (src/lib/styles/main.scss).
 :root {
-	--text-color: #eceadf;
+  --text-color: #eceadf;
 
-	--rust-blue: #28607f;
-	--rust-dark-blue: #1e2650;
-	--rust-green: #61784d;
-	--rust-orange: #d34516;
-	--rust-silver: #67737a;
+  --rust-blue: #28607f;
+  --rust-dark-blue: #1e2650;
+  --rust-green: #61784d;
+  --rust-orange: #d34516;
+  --rust-silver: #67737a;
 
-	--zed-blue: #1348dc;
-	--zed-blue-hover: #0640ac;
-	--zed-blue-text: oklch(80.9% 0.105 251.813);
-	--zed-dark: #121316;
+  --zed-blue: #1348dc;
+  --zed-blue-hover: #0640ac;
+  --zed-blue-text: oklch(80.9% 0.105 251.813);
+  --zed-dark: #121316;
 
-	// Semantic aliases used across atkuzu components.
-	--bg: var(--zed-dark);
-	--fg: var(--zed-blue-text);
-	--muted: color-mix(in oklab, var(--fg) 55%, transparent);
-	--border: color-mix(in oklab, var(--rust-silver) 45%, transparent);
-	--accent: var(--zed-blue);
-	--accent-hover: var(--zed-blue-hover);
-	--accent-contrast: #f5f7ff;
-	--accent-secondary: var(--rust-blue);
-	--danger: #ef4444;
-	--surface: color-mix(in oklab, var(--bg) 88%, var(--fg));
-	--surface-hover: color-mix(in oklab, var(--bg) 80%, var(--fg));
+  // Semantic aliases used across atkuzu components.
+  --bg: var(--zed-dark);
+  --fg: var(--zed-blue-text);
+  --muted: color-mix(in oklab, var(--fg) 55%, transparent);
+  --border: color-mix(in oklab, var(--rust-silver) 45%, transparent);
+  --accent: var(--zed-blue);
+  --accent-hover: var(--zed-blue-hover);
+  --accent-contrast: #f5f7ff;
+  --accent-secondary: var(--rust-blue);
+  --danger: #ef4444;
+  --surface: color-mix(in oklab, var(--bg) 88%, var(--fg));
+  --surface-hover: color-mix(in oklab, var(--bg) 80%, var(--fg));
 
-	// Type
-	--font-sans:
-		system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-	--font-mono:
-		ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  // Type
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-	// Spacing (4px base)
-	--space-1: 0.25rem;
-	--space-2: 0.5rem;
-	--space-3: 0.75rem;
-	--space-4: 1rem;
-	--space-6: 1.5rem;
-	--space-8: 2rem;
-	--space-12: 3rem;
+  // Spacing (4px base)
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
 
-	// Radius
-	--radius-sm: 6px;
-	--radius-md: 10px;
-	--radius-full: 999px;
+  // Radius
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-full: 999px;
 
-	// Motion
-	--ease: cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-fast: 150ms var(--ease);
+  // Motion
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 150ms var(--ease);
 
-	--container-width: 40rem;
+  --container-width: 40rem;
 }
