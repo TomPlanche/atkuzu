@@ -347,7 +347,9 @@
     <div class="daily__actions">
       <span class="stat">Time <strong>{formatTime(elapsedSeconds)}</strong></span>
       <span class="stat">Toggles <strong>{toggleCount}</strong></span>
-      <Button icon={resetIcon} onclick={resetBoard} type="button" variant="secondary">Reset</Button>
+      <Button type="button" icon={resetIcon} variant="secondary" letter="r" onclick={resetBoard}>
+        Reset
+      </Button>
     </div>
 
     <Board

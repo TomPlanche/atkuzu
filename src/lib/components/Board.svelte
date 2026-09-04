@@ -11,6 +11,86 @@
   };
 
   let { size, board, given, invalid, solved, oncellclick }: Props = $props();
+
+  // Not reactive on purpose: this is an imperative registry of DOM nodes for keyboard
+  // navigation, not render state, so it doesn't need (and shouldn't trigger) reactivity.
+  // oxlint-disable-next-line svelte/prefer-svelte-reactivity
+  const cellEls: Record<string, HTMLButtonElement> = {};
+
+  const focusCell = (r: number, c: number) => {
+    cellEls[`${r}-${c}`]?.focus();
+  };
+
+  const focusFirstCell = () => {
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (!given[r][c]) {
+          focusCell(r, c);
+          return;
+        }
+      }
+    }
+  };
+
+  // Steps in the given direction until it lands on a focusable (non-given) cell, since a
+  // given cell is `disabled` and can't receive focus. Stops at the board edge if none found.
+  const moveFocus = (r: number, c: number, dr: number, dc: number) => {
+    let nr = r + dr;
+    let nc = c + dc;
+
+    while (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+      if (!given[nr][nc]) {
+        focusCell(nr, nc);
+        return;
+      }
+
+      nr += dr;
+      nc += dc;
+    }
+  };
+
+  // Space/Enter already toggle the focused cell for free: it's a native <button>. Only the
+  // arrow keys need wiring up, to move focus between cells.
+  const onCellKeydown = (event: KeyboardEvent, r: number, c: number) => {
+    switch (event.key) {
+      case "ArrowUp":
+        event.preventDefault();
+        moveFocus(r, c, -1, 0);
+        break;
+      case "ArrowDown":
+        event.preventDefault();
+        moveFocus(r, c, 1, 0);
+        break;
+      case "ArrowLeft":
+        event.preventDefault();
+        moveFocus(r, c, 0, -1);
+        break;
+      case "ArrowRight":
+        event.preventDefault();
+        moveFocus(r, c, 0, 1);
+        break;
+    }
+  };
+
+  const NAV_KEYS = ["Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+
+  // Before the player has focused anything (fresh page load, nothing tabbed into yet),
+  // Tab or an arrow key would normally go to the first focusable element in document
+  // order, the header. Redirect that very first press straight into the grid instead.
+  // Never fires again afterwards: once anything has focus, activeElement isn't <body>.
+  const onWindowKeydown = (event: KeyboardEvent) => {
+    if (document.activeElement !== document.body || !NAV_KEYS.includes(event.key)) {
+      return;
+    }
+
+    event.preventDefault();
+    focusFirstCell();
+  };
+
+  $effect(() => {
+    window.addEventListener("keydown", onWindowKeydown);
+    return () => window.removeEventListener("keydown", onWindowKeydown);
+  });
 </script>
 
 <div class="board-wrap">
@@ -18,6 +98,7 @@
     {#each board as row, r (r)}
       {#each row as cell, c (c)}
         <button
+          bind:this={cellEls[`${r}-${c}`]}
           type="button"
           class="cell"
           class:given={given[r][c]}
@@ -26,6 +107,7 @@
           disabled={given[r][c]}
           aria-label={`Row ${r + 1}, column ${c + 1}`}
           onclick={() => oncellclick(r, c)}
+          onkeydown={(event) => onCellKeydown(event, r, c)}
         >
           {cell === null ? "" : cell}
         </button>
