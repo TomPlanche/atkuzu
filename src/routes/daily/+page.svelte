@@ -10,6 +10,8 @@
     parseGrid
   } from "$lib/game/board";
   import { sha256Hex } from "$lib/game/hash";
+  import toast from "svelte-french-toast";
+  import { toastErrorOptions, toastLoadingOptions, toastSuccessOptions } from "$lib/toast";
   import Board from "$lib/components/Board.svelte";
   import Button from "$lib/components/Button.svelte";
 
@@ -60,21 +62,66 @@
     return readStoredBoard(size) ?? cloneGrid(entry.initial);
   };
 
+  type Progress = { toggleCount: number; elapsedSeconds: number };
+
+  const progressKey = (size: DailySize) => `atkuzu:daily:${data.date}:${size}:progress`;
+
+  const progressFor = (size: DailySize): Progress => {
+    try {
+      const raw = localStorage.getItem(progressKey(size));
+
+      return raw ? (JSON.parse(raw) as Progress) : { toggleCount: 0, elapsedSeconds: 0 };
+    } catch {
+      return { toggleCount: 0, elapsedSeconds: 0 };
+    }
+  };
+
+  const rkeyStorageKey = (size: DailySize) => `atkuzu:daily:${data.date}:${size}:rkey`;
+
+  const rkeyFor = (size: DailySize): string | null => {
+    try {
+      return localStorage.getItem(rkeyStorageKey(size));
+    } catch {
+      return null;
+    }
+  };
+
+  const pdslsUrl = (did: string, rkey: string): string =>
+    `https://pdsls.dev/at://${did}/com.tomplanche.atkuzu.result/${rkey}`;
+
   const defaultSize: DailySize = 6;
+  const initialProgress = progressFor(defaultSize);
 
   let selectedSize = $state<DailySize>(defaultSize);
   let board = $state<Cell[][]>(boardFor(defaultSize));
-  let toggleCount = $state(0);
+  let toggleCount = $state(initialProgress.toggleCount);
+  let elapsedSeconds = $state(initialProgress.elapsedSeconds);
   let isSolved = $state(false);
+  // Set once we know this puzzle's PDS record key, either from a fresh /daily/complete
+  // response or restored from localStorage. Null until then (not logged in, not yet sent,
+  // or solved before this link existed), in which case the banner just skips the link.
+  let recordRkey = $state<string | null>(rkeyFor(defaultSize));
+  // Deliberately a plain Set, not SvelteSet: the effect below both reads and mutates it,
+  // and a reactive Set would re-trigger that same effect on every add()/delete(), which
+  // turned a single failed submit into an instant infinite retry loop.
+  // oxlint-disable-next-line svelte/prefer-svelte-reactivity
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity
+  const recording = new Set<DailySize>();
 
   const selectSize = (size: DailySize) => {
     selectedSize = size;
     board = boardFor(size);
-    toggleCount = 0;
+    const progress = progressFor(size);
+    toggleCount = progress.toggleCount;
+    elapsedSeconds = progress.elapsedSeconds;
+    recordRkey = rkeyFor(size);
   };
 
   const given = $derived(entries[selectedSize].given);
   const isFull = $derived(board.length > 0 && board.every((row) => row.every((c) => c !== null)));
+  const recordUrl = $derived(
+    data.session && recordRkey ? pdslsUrl(data.session.did, recordRkey) : null
+  );
   const invalid = $derived(board.length > 0 ? computeInvalid(board, selectedSize) : []);
   const isRuleValid = $derived(invalid.every((row) => row.every((v) => !v)));
 
@@ -91,7 +138,19 @@
   const resetBoard = () => {
     board = cloneGrid(entries[selectedSize].initial);
     toggleCount = 0;
+    elapsedSeconds = 0;
   };
+
+  const formatTime = (total: number): string => {
+    const m = Math.floor(total / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (total % 60).toString().padStart(2, "0");
+
+    return `${m}:${s}`;
+  };
+
+  const recordedKey = (date: string, size: DailySize) => `atkuzu:daily:${date}:${size}:recorded`;
 
   $effect(() => {
     const entry = entries[selectedSize];
@@ -103,6 +162,25 @@
       localStorage.setItem(storageKey(selectedSize), JSON.stringify(board));
     } catch {
       // localStorage unavailable (private mode, quota), so progress just won't persist.
+    }
+  });
+
+  // Mirrors the board-persist effect above: without this, elapsedSeconds/toggleCount reset
+  // to 0 on every remount (e.g. navigating away and back, or logging back in later), even
+  // though the board itself was restored already-solved.
+  $effect(() => {
+    const entry = entries[selectedSize];
+    if (!entry.puzzle) {
+      return;
+    }
+
+    try {
+      localStorage.setItem(
+        progressKey(selectedSize),
+        JSON.stringify({ toggleCount, elapsedSeconds })
+      );
+    } catch {
+      // localStorage unavailable; the timer/toggle count just won't survive a reload.
     }
   });
 
@@ -123,6 +201,102 @@
     return () => {
       cancelled = true;
     };
+  });
+
+  $effect(() => {
+    if (isSolved) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      elapsedSeconds += 1;
+    }, 1000);
+
+    return () => clearInterval(timer);
+  });
+
+  $effect(() => {
+    const size = selectedSize;
+    const date = data.date;
+
+    if (!isSolved || !data.session || recording.has(size)) {
+      return;
+    }
+
+    try {
+      if (localStorage.getItem(recordedKey(date, size)) === "1") {
+        return;
+      }
+    } catch {
+      // localStorage unavailable; fall through and let the PDS's write-once guard protect us.
+    }
+
+    recording.add(size);
+
+    const attempt = fetch("/daily/complete", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        date,
+        size,
+        board: encodeGrid(board),
+        durationSeconds: elapsedSeconds,
+        toggleCount
+      })
+    })
+      .then((res) => res.json())
+      .then(
+        (result: {
+          recorded: boolean;
+          reason?: string;
+          alreadyRecorded?: boolean;
+          rkey?: string;
+        }) => {
+          if (!result.recorded) {
+            throw new Error(result.reason ?? "unknown error");
+          }
+
+          try {
+            localStorage.setItem(recordedKey(date, size), "1");
+            if (result.rkey) {
+              localStorage.setItem(rkeyStorageKey(size), result.rkey);
+            }
+          } catch {
+            // localStorage unavailable; the PDS's write-once guard still protects a retry.
+          }
+
+          if (result.rkey && size === selectedSize) {
+            recordRkey = result.rkey;
+          }
+
+          return result;
+        }
+      );
+
+    toast.promise(
+      attempt,
+      {
+        loading: "Saving your result to your PDS…",
+        success: (result) =>
+          result.alreadyRecorded
+            ? "This puzzle was already recorded."
+            : "Result saved to your PDS.",
+        error: "Couldn't save your result to your PDS."
+      },
+      {
+        success: toastSuccessOptions,
+        error: toastErrorOptions,
+        loading: toastLoadingOptions
+      }
+    );
+
+    attempt
+      .catch(() => {
+        // Already surfaced via the toast above, never block the solved banner over this.
+      })
+      .finally(() => {
+        recording.delete(size);
+      });
   });
 </script>
 
@@ -171,6 +345,7 @@
     </p>
   {:else}
     <div class="daily__actions">
+      <span class="stat">Time <strong>{formatTime(elapsedSeconds)}</strong></span>
       <span class="stat">Toggles <strong>{toggleCount}</strong></span>
       <Button icon={resetIcon} onclick={resetBoard} type="button" variant="secondary">Reset</Button>
     </div>
@@ -185,7 +360,14 @@
     />
 
     <p aria-hidden={!isSolved} class="solved-banner" class:visible={isSolved}>
-      <span class="solved-banner__pill">Solved today's {selectedSize}×{selectedSize}.</span>
+      <span class="solved-banner__pill">
+        Solved today's {selectedSize}×{selectedSize}.
+        {#if recordUrl}
+          <!-- recordUrl is always an absolute https://pdsls.dev/... URL, built in pdslsUrl() above -->
+          <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+          &nbsp;<a href={recordUrl} target="_blank" rel="noopener noreferrer">View record</a>
+        {/if}
+      </span>
     </p>
   {/if}
 </section>

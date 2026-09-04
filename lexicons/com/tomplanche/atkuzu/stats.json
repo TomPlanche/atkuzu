@@ -39,6 +39,10 @@
             "type": "string",
             "format": "datetime",
             "description": "When this record was last updated."
+          },
+          "test": {
+            "type": "boolean",
+            "description": "True if the current values reflect test writes only, not real completions. Since this record is a singleton (`self`), a real write always overwrites a test one and omits this field."
           }
         }
       }

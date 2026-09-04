@@ -1,5 +1,5 @@
 /**
- * validate-lexicons.ts — lint atkuzu's lexicon schemas against the official
+ * validate-lexicons.ts: lint atkuzu's lexicon schemas against the official
  * AT Protocol Lexicon Style Guide.
  *
  * Enforced rules:
@@ -74,7 +74,7 @@ const checkDef = (file: string, where: string, def: LexNode | undefined): void =
   if (def.type === "array" && def.items) {
     const itemType = def.items.type;
     if (itemType && ["string", "integer", "boolean", "number"].includes(itemType)) {
-      err(file, `${where}: array of bare ${itemType} — wrap each element in an object/ref`);
+      err(file, `${where}: array of bare ${itemType}, wrap each element in an object/ref`);
     }
     checkDef(file, `${where}[]`, def.items);
   }

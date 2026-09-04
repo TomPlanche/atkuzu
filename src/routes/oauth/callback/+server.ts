@@ -18,7 +18,7 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
     const sessionManager = await getSessionManager();
     await sessionManager.createAndSetSession(event, session.did, atpSession.data.handle);
 
-    return redirect(302, "/");
+    return redirect(302, "/?toast=connected");
   } catch (err) {
     //redirects are errors, so this passes it along
     if (isRedirect(err)) {

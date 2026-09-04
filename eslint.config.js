@@ -45,7 +45,7 @@ export default defineConfig(
       semi: ["error", "always"],
       "object-curly-spacing": ["error", "always"],
       curly: ["error", "all"],
-      "brace-style": ["error", "1tbs", { allowSingleLine: false }], // No `function` declarations — always `const foo = (...) => {}`.
+      "brace-style": ["error", "1tbs", { allowSingleLine: false }], // No `function` declarations, always `const foo = (...) => {}`.
       "func-style": ["error", "expression", { allowArrowFunctions: true }], // No `function` expressions either, except where an arrow can't stand in
       // (class methods/constructors, object getters/setters, generators).
       "no-restricted-syntax": [

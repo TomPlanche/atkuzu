@@ -1,35 +1,32 @@
 /**
- * publish-lexicons.ts: publish atkuzu's lexicon schemas as
- * `com.atproto.lexicon.schema` records under the `com.tomplanche.atkuzu.*` authority.
+ * delete-record.ts: delete a single record from the account's own PDS. Mainly for
+ * clearing out `test-`-prefixed com.tomplanche.atkuzu.result/.stats records left behind
+ * by local (`DEV`) testing of the daily-completion write path.
  *
- * Run by the OWNER of the account that controls the namespace authority. Requires:
- *   ATKUZU_PUBLISH_IDENTIFIER  handle or DID of the publishing account
+ * Requires the same env vars as lexicons:publish:
+ *   ATKUZU_PUBLISH_IDENTIFIER  handle or DID of the account that owns the record
  *   ATKUZU_PUBLISH_PASSWORD    app password (Settings → App Passwords)
- *   ATKUZU_PDS                 optional PDS override; by default the account's PDS
- *                              is resolved from its DID document (works with any
- *                              host, including self-hosted PDSs)
+ *   ATKUZU_PDS                 optional PDS override; by default resolved from the
+ *                              account's DID document
  *
- * For lexicon resolution to work network-wide, the authority domain also needs a
- * `_lexicon` DNS TXT record on `_lexicon.atkuzu.tomplanche.com` with value
- * `did=<publishing did>`. Publishing the records is idempotent (putRecord with
- * rkey = the NSID).
- *
- * Usage:  ATKUZU_PUBLISH_IDENTIFIER=... ATKUZU_PUBLISH_PASSWORD=... npm run lexicons:publish
+ * Usage:  ATKUZU_PUBLISH_IDENTIFIER=... ATKUZU_PUBLISH_PASSWORD=... \
+ *           npm run records:delete -- com.tomplanche.atkuzu.result test-1-6
  */
 import "dotenv/config";
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
 
-const LEX_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../lexicons");
-const SCHEMA_COLLECTION = "com.atproto.lexicon.schema";
+const [collection, rkey] = process.argv.slice(2);
+
+if (!collection || !rkey) {
+  console.error("Usage: tsx scripts/delete-record.ts <collection> <rkey>");
+  process.exit(1);
+}
 
 const identifier = process.env.ATKUZU_PUBLISH_IDENTIFIER;
 const password = process.env.ATKUZU_PUBLISH_PASSWORD;
 
 if (!identifier || !password) {
   console.error(
-    "Set ATKUZU_PUBLISH_IDENTIFIER and ATKUZU_PUBLISH_PASSWORD (app password) to publish."
+    "Set ATKUZU_PUBLISH_IDENTIFIER and ATKUZU_PUBLISH_PASSWORD (app password) to delete."
   );
   process.exit(1);
 }
@@ -78,7 +75,6 @@ const resolvePds = async (did: string): Promise<string> => {
   return svc.serviceEndpoint;
 };
 
-// Resolve the account's real PDS (honour an explicit override if provided).
 const did0 = await resolveDid(identifier);
 
 let pds = process.env.ATKUZU_PDS;
@@ -87,22 +83,6 @@ if (!pds) {
   pds = await resolvePds(did0);
   console.log(`found PDS: ${pds}`);
 }
-console.log(`publishing to PDS ${pds}`);
-
-const walk = (dir: string): string[] => {
-  const out: string[] = [];
-
-  for (const name of readdirSync(dir)) {
-    const p = resolve(dir, name);
-    if (statSync(p).isDirectory()) {
-      out.push(...walk(p));
-    } else if (name.endsWith(".json")) {
-      out.push(p);
-    }
-  }
-
-  return out;
-};
 
 const xrpc = async (method: string, body: unknown, token?: string): Promise<unknown> => {
   const res = await fetch(`${pds}/xrpc/${method}`, {
@@ -131,17 +111,5 @@ const did = session.did;
 const token = session.accessJwt;
 console.log(`authenticated as ${did}`);
 
-for (const file of walk(LEX_DIR)) {
-  const doc = JSON.parse(readFileSync(file, "utf8"));
-  const record = { ...doc, $type: SCHEMA_COLLECTION };
-  // Sequential on purpose: keeps "published X" logs in file order and avoids
-  // hammering the PDS with parallel writes for what is a one-off script.
-  // oxlint-disable-next-line no-await-in-loop
-  await xrpc(
-    "com.atproto.repo.putRecord",
-    { repo: did, collection: SCHEMA_COLLECTION, rkey: doc.id, record },
-    token
-  );
-  console.log(`published ${doc.id}`);
-}
-console.log("done.");
+await xrpc("com.atproto.repo.deleteRecord", { repo: did, collection, rkey }, token);
+console.log(`deleted ${collection}/${rkey}`);

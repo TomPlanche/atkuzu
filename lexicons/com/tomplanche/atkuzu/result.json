@@ -4,11 +4,18 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "An immutable record of one completed atkuzu (Binairo/Takuzu) daily puzzle, written to the player's own PDS. Write-once: no field may change after creation. The record key is the puzzle number as a string (e.g. `412`), so each puzzle can be recorded at most once per account and re-solving cannot overwrite or spam.",
+      "description": "An immutable record of one completed atkuzu (Binairo/Takuzu) daily puzzle, written to the player's own PDS. Write-once: no field may change after creation. The record key is `<puzzleNumber>-<size>` (e.g. `412-8`), so each size can be recorded at most once per puzzle day per account and re-solving cannot overwrite or spam.",
       "key": "any",
       "record": {
         "type": "object",
-        "required": ["puzzleNumber", "puzzleDate", "solved", "durationSeconds", "createdAt"],
+        "required": [
+          "puzzleNumber",
+          "puzzleDate",
+          "size",
+          "solved",
+          "durationSeconds",
+          "createdAt"
+        ],
         "properties": {
           "puzzleNumber": {
             "type": "integer",
@@ -19,6 +26,11 @@
             "type": "string",
             "format": "datetime",
             "description": "UTC midnight datetime of the puzzle's calendar day."
+          },
+          "size": {
+            "type": "integer",
+            "enum": [6, 8, 12],
+            "description": "Board side length of the daily puzzle solved (6x6, 8x8, or 12x12); each size is its own record for a given day."
           },
           "solved": {
             "type": "boolean",
@@ -38,6 +50,10 @@
             "type": "string",
             "format": "datetime",
             "description": "When the player finished the puzzle and the record was created."
+          },
+          "test": {
+            "type": "boolean",
+            "description": "True if this record was written while testing the write path, not a genuine daily completion. Absent (not `false`) on real records. Test records also use a `test-` rkey prefix so they never collide with a real puzzle's slot."
           }
         }
       }

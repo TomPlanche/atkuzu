@@ -1,8 +1,8 @@
 <script lang="ts">
   // A button in zed.dev's style: solid accent fill with a darker inset bottom
   // rim (a subtle bevel, flattened on hover/press), monospace label, an
-  // optional leading icon, and an optional trailing `<kbd>` letter badge —
-  // modelled on zed.dev's "Download now" button (icon + "D" shortcut kbd).
+  // optional leading icon, and an optional trailing `<kbd>` letter badge.
+  // Modelled on zed.dev's "Download now" button (icon + "D" shortcut kbd).
   import type { Snippet } from "svelte";
 
   type Variant = "primary" | "secondary";
@@ -42,7 +42,7 @@
   };
 
   // Pressing the bare letter key acts like a click on this button, mirroring
-  // the `<kbd>` hint it displays — mimics zed.dev's "Download now" shortcut.
+  // the `<kbd>` hint it displays, mimics zed.dev's "Download now" shortcut.
   $effect(() => {
     if (!letter) {
       return;

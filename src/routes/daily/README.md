@@ -11,13 +11,14 @@ Board progress persists per date and size in `localStorage`. No account required
 - [ ] Schedule `scripts/generate-daily.ts` so tomorrow's archive is always published ahead of the UTC day boundary.
 - [ ] Add a streaks and history view backed by `localStorage` completions (design not started).
 - [ ] Add an archive index (`/daily/index.json`) for browsing past days.
-- [ ] Write the result to the player's PDS on completion.
-  - [ ] Call `createRecord` for `com.tomplanche.atkuzu.result` when the player solves a daily, keyed by date and size so each is recorded once.
-  - [ ] Skip the write when the player is not logged in.
-  - [ ] Handle a failed write (no network, no scope) without blocking the solved banner.
-- [ ] Update `com.tomplanche.atkuzu.stats` after each completed daily.
-  - [ ] Read the player's current stats record, or start from zero if none exists.
-  - [ ] Compute the next `gamesPlayed`, `gamesWon`, `currentStreak`, and `maxStreak` values.
-  - [ ] Detect a broken streak from the gap between the last solved date and today's date.
-  - [ ] Write the updated stats record after the result record.
+- [x] Write the result to the player's PDS on completion (`src/routes/daily/complete/+server.ts`, `src/lib/server/atproto/records.ts`).
+  - [x] Call `createRecord` for `com.tomplanche.atkuzu.result` when the player solves a daily, keyed by `<puzzleNumber>-<size>` so each size is recorded once.
+  - [x] Skip the write when the player is not logged in.
+  - [x] Handle a failed write (no network, no scope) without blocking the solved banner.
+  - [x] Local (`DEV`) writes use a `test-` rkey prefix and a `test: true` field so they never collide with or count as real completions.
+- [x] Update `com.tomplanche.atkuzu.stats` after each completed daily.
+  - [x] Read the player's current stats record, or start from zero if none exists.
+  - [x] Compute the next `gamesPlayed`, `gamesWon`, `currentStreak`, and `maxStreak` values.
+  - [x] Detect a broken streak from the gap between the last solved puzzle number and today's.
+  - [x] Write the updated stats record after the result record.
 - Per-cell "this one is wrong" hints are not possible while the client holds no solution. Out of scope unless that design changes.

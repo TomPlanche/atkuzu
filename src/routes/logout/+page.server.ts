@@ -18,6 +18,6 @@ export const actions: Actions = {
       }
     }
 
-    redirect(303, "/");
+    redirect(303, "/?toast=disconnected");
   }
 };

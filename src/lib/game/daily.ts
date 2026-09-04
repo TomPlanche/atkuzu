@@ -24,3 +24,13 @@ export type DailyFile = {
 export const todayUtcDate = (): string => new Date().toISOString().slice(0, 10);
 
 export const dailyFileUrl = (date: string): string => `/daily/${date}.json`;
+
+/** Day 1 of the shared daily series (UTC), matching the first published archive. */
+const DAILY_EPOCH_MS = Date.parse("2026-09-04T00:00:00Z");
+
+/**
+ * Daily puzzle index = whole UTC days since the shared epoch, +1. Launch day = 1.
+ * Matches the `puzzleNumber` field of `com.tomplanche.atkuzu.result`.
+ */
+export const puzzleNumber = (date: string): number =>
+  Math.round((Date.parse(`${date}T00:00:00Z`) - DAILY_EPOCH_MS) / 86_400_000) + 1;

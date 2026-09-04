@@ -66,7 +66,7 @@ a:focus-visible {
   padding-inline: var(--space-6);
 }
 
-// Baseline for any bare <button> — real buttons should use $lib/components/Button.svelte.
+// Baseline for any bare <button>, real buttons should use $lib/components/Button.svelte.
 button {
   font: inherit;
   cursor: pointer;

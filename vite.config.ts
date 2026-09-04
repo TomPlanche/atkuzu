@@ -9,7 +9,7 @@ export default defineConfig({
     allowedHosts: process.env.OAUTH_DOMAIN ? [process.env.OAUTH_DOMAIN] : [],
     watch: {
       // macOS FSEvents (used by chokidar for directory watching) doesn't
-      // deliver events in this environment — confirmed with a standalone
+      // deliver events in this environment. Confirmed with a standalone
       // fsevents.watch() call that loads fine but never fires. Polling
       // sidesteps FSEvents entirely so file changes are actually picked up.
       usePolling: true

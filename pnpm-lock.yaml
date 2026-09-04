@@ -44,6 +44,9 @@ importers:
       pino:
         specifier: ^10.1.0
         version: 10.1.0
+      svelte-french-toast:
+        specifier: 2.0.0-alpha.0
+        version: 2.0.0-alpha.0(svelte@5.45.8)
     devDependencies:
       '@eslint/compat':
         specifier: ^1.4.0
@@ -2280,6 +2283,16 @@ packages:
       svelte:
         optional: true
 
+  svelte-french-toast@2.0.0-alpha.0:
+    resolution: {integrity: sha512-81wcVaY9UZ/0JuzLEizMSoIXqNbX7yhfTZavBuw94T3cnT2HmJ9O+qXY/c91h9FkeMwboo0KHZVmzOEQVTXDFg==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  svelte-writable-derived@3.1.1:
+    resolution: {integrity: sha512-w4LR6/bYZEuCs7SGr+M54oipk/UQKtiMadyOhW0PTwAtJ/Ai12QS77sLngEcfBx2q4H8ZBQucc9ktSA5sUGZWw==}
+    peerDependencies:
+      svelte: ^3.2.1 || ^4.0.0-next.1 || ^5.0.0-next.94
+
   svelte@5.45.8:
     resolution: {integrity: sha512-1Jh7FwVh/2Uxg0T7SeE1qFKMhwYH45b2v53bcZpW7qHa6O8iU1ByEj56PF0IQ6dU4HE5gRkic6h+vx+tclHeiw==}
     engines: {node: '>=18'}
@@ -4270,6 +4283,15 @@ snapshots:
       postcss-scss: 4.0.9(postcss@8.5.6)
       postcss-selector-parser: 7.1.1
     optionalDependencies:
+      svelte: 5.45.8
+
+  svelte-french-toast@2.0.0-alpha.0(svelte@5.45.8):
+    dependencies:
+      svelte: 5.45.8
+      svelte-writable-derived: 3.1.1(svelte@5.45.8)
+
+  svelte-writable-derived@3.1.1(svelte@5.45.8):
+    dependencies:
       svelte: 5.45.8
 
   svelte@5.45.8:

@@ -23,6 +23,7 @@
     "db:studio": "drizzle-kit studio",
     "lexicons:validate": "tsx scripts/validate-lexicons.ts",
     "lexicons:publish": "tsx scripts/publish-lexicons.ts",
+    "records:delete": "tsx scripts/delete-record.ts",
     "daily:generate": "tsx scripts/generate-daily.ts"
   },
   "dependencies": {
@@ -37,7 +38,8 @@
     "@sveltejs/adapter-node": "^5.4.0",
     "better-sqlite3": "12.4.1",
     "node-schedule": "^2.1.1",
-    "pino": "^10.1.0"
+    "pino": "^10.1.0",
+    "svelte-french-toast": "2.0.0-alpha.0"
   },
   "devDependencies": {
     "@eslint/compat": "^1.4.0",

@@ -60,7 +60,7 @@
       localStorage.setItem(RECENT_KEY, JSON.stringify(next));
       recent = next;
     } catch {
-      // localStorage unavailable (private mode, quota) — not fatal
+      // localStorage unavailable (private mode, quota), not fatal
     }
   };
 

@@ -9,7 +9,7 @@ This is a SvelteKit app with browser OAuth already wired up: users log in with t
 any other PDS), and actions are taken on their behalf against their own repo. There is no game logic here yet, this is
 the OAuth/session/DB scaffolding the game will be built on.
 
-Forked from the [atproto-sveltekit-template](https://tangled.org/pds.dad/atproto-sveltekit-template) —
+Forked from the [atproto-sveltekit-template](https://tangled.org/pds.dad/atproto-sveltekit-template),
 see [NOTICE.md](NOTICE.md) for attribution.
 
 ## Dev Setup
@@ -35,13 +35,13 @@ OAuth is configured entirely from environment variables, no code changes needed.
 
 ### Types of OAuth clients
 
-- Development local — Set `DEV=true` in `.env` to use a local development client. This is a special client just for
+- Development local: Set `DEV=true` in `.env` to use a local development client. This is a special client just for
   development, it does not require a public url. As
   outlined [here](https://atproto.com/specs/oauth#localhost-client-development). This is the default from
   copying [.env.example](.env.example)
-- Production Public — Remove `DEV=true`, set `OAUTH_DOMAIN` to your publicly accessible domain in `.env` to use a
+- Production Public: Remove `DEV=true`, set `OAUTH_DOMAIN` to your publicly accessible domain in `.env` to use a
   production public client. These have a lower atproto oauth session lifetime, limited to 2 weeks.
-- Production Confidential — Follow `Production Public` and set `OAUTH_JWK` to the value from `node ./bin/gen-jwk.js`.
+- Production Confidential: Follow `Production Public` and set `OAUTH_JWK` to the value from `node ./bin/gen-jwk.js`.
   **These are cryptographic signing keys and should be kept secret and private**. These have the longest session
   lifetime: 180 days for refresh tokens, or indefinitely if refreshed, pending revocation or jwk rotation.
 
@@ -69,11 +69,11 @@ A couple of other odds and ends you can set for OAuth to customize the branding.
 `yourpds.com/account` for now, but it is a standard and more may adopt
 it. [Docs](https://atproto.com/specs/oauth#client-id-metadata-document):
 
-- `OAUTH_CLIENT_NAME` — (string, optional): human-readable name of the client
-- `OAUTH_LOGO_URI` — (string, optional): URL to client logo. Only https: URIs are allowed.
-- `OAUTH_TOS_URI` — (string, optional): URL to human-readable terms of service (ToS) for the client. Only https: URIs
+- `OAUTH_CLIENT_NAME` (string, optional): human-readable name of the client
+- `OAUTH_LOGO_URI` (string, optional): URL to client logo. Only https: URIs are allowed.
+- `OAUTH_TOS_URI` (string, optional): URL to human-readable terms of service (ToS) for the client. Only https: URIs
   are allowed.
-- `OAUTH_POLICY_URI` — (string, optional): URL to human-readable privacy policy for the client. Only https: URIs are
+- `OAUTH_POLICY_URI` (string, optional): URL to human-readable privacy policy for the client. Only https: URIs are
   allowed.
 
 ### Database
@@ -105,10 +105,10 @@ the login screen. It queries the public Bluesky appview (`public.api.bsky.app`) 
 atkuzu's record types are defined as [lexicons](https://atproto.com/specs/lexicon) under the `com.tomplanche.atkuzu.*`
 NSID authority (domain authority `atkuzu.tomplanche.com`, reversed):
 
-- [lexicons/com/tomplanche/atkuzu/result.json](./lexicons/com/tomplanche/atkuzu/result.json) —
+- [lexicons/com/tomplanche/atkuzu/result.json](./lexicons/com/tomplanche/atkuzu/result.json):
   `com.tomplanche.atkuzu.result`, one immutable write-once record per completed daily puzzle (puzzle number, whether it
   was solved, time taken, and optionally how many cells were toggled)
-- [lexicons/com/tomplanche/atkuzu/stats.json](./lexicons/com/tomplanche/atkuzu/stats.json) —
+- [lexicons/com/tomplanche/atkuzu/stats.json](./lexicons/com/tomplanche/atkuzu/stats.json):
   `com.tomplanche.atkuzu.stats`, a single mutable per-account record (`currentStreak`, `maxStreak`, `gamesPlayed`,
   `gamesWon`, `lastPuzzleNumber`), also doubling as the "this account plays atkuzu" declaration record
 
@@ -118,22 +118,25 @@ Validate the schemas against the [Lexicon Style Guide](https://atproto.com/guide
 pnpm run lexicons:validate
 ```
 
-For now these are used unpublished (`validate: false` when calling `createRecord`), no DNS setup required. To make them
-network-resolvable and enable `validate: true`, publish them as `com.atproto.lexicon.schema` records (run by the account
-that controls the namespace authority):
+Publish them as `com.atproto.lexicon.schema` records (run by the account that controls the namespace authority) to make
+them network-resolvable:
 
 ```sh
 ATKUZU_PUBLISH_IDENTIFIER=you.example ATKUZU_PUBLISH_PASSWORD=<app-password> pnpm run lexicons:publish
 ```
 
 > Publishing also requires a `_lexicon` DNS TXT record on `_lexicon.atkuzu.tomplanche.com` with value
-> `did=<publishing did>`. Lexicon resolution is **not hierarchical** — each distinct authority needs its own exact TXT
+> `did=<publishing did>`. Lexicon resolution is **not hierarchical**, each distinct authority needs its own exact TXT
 > record, resolvers never walk up the DNS tree.
 > See [Lexicon Publication and Resolution](https://atproto.com/specs/lexicon#lexicon-publication-and-resolution).
 
+Writes still pass `validate: false` (see [records.ts](src/lib/server/atproto/records.ts)): not every PDS resolves
+third-party lexicons over the network for validation yet, confirmed failing on the account's own PDS with
+`Unknown lexicon type` even after publishing and DNS were both in place.
+
 ### Other production considerations
 
-There isn't a great way to run a "sidecar process" with SvelteKit —
+There isn't a great way to run a "sidecar process" with SvelteKit:
 a [Jetstream listener](https://docs.bsky.app/blog/jetstream) that runs alongside the SvelteKit application. If the game
 ends up needing to listen to the firehose or jetstream for real-time record creation, swap the database layer for
 something not embedded, then run a separate container (or process) with a script in a loop to consume that
