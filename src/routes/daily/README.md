@@ -8,7 +8,7 @@ Board progress persists per date and size in `localStorage`. No account required
 
 ## TODO
 
-- [ ] Schedule `scripts/generate-daily.ts` so tomorrow's archive is always published ahead of the UTC day boundary.
+- [x] Schedule `scripts/generate-daily.ts` so tomorrow's archive is always published ahead of the UTC day boundary (`scripts/schedule-daily.ts`, run under pm2 via `ecosystem.config.cjs`).
 - [ ] Add a streaks and history view backed by `localStorage` completions (design not started).
 - [ ] Add an archive index (`/daily/index.json`) for browsing past days.
 - [x] Write the result to the player's PDS on completion (`src/routes/daily/complete/+server.ts`, `src/lib/server/atproto/records.ts`).

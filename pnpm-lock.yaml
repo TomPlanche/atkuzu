@@ -69,6 +69,9 @@ importers:
       '@types/node':
         specifier: ^24
         version: 24.10.2
+      '@types/node-schedule':
+        specifier: ^2.1.8
+        version: 2.1.8
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
@@ -1310,6 +1313,9 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
+  '@types/node-schedule@2.1.8':
+    resolution: {integrity: sha512-k00g6Yj/oUg/CDC+MeLHUzu0+OFxWbIqrFfDiLi6OPKxTujvpv29mHGM8GtKr7B+9Vv92FcK/8mRqi1DK5f3hA==}
 
   '@types/node@24.10.2':
     resolution: {integrity: sha512-WOhQTZ4G8xZ1tjJTvKOpyEVSGgOTvJAfDK3FNFgELyaTpzhdgHVHeqW8V+UJvzF5BT+/B54T/1S2K6gd9c7bbA==}
@@ -3300,6 +3306,10 @@ snapshots:
   '@types/estree@1.0.8': {}
 
   '@types/json-schema@7.0.15': {}
+
+  '@types/node-schedule@2.1.8':
+    dependencies:
+      '@types/node': 24.10.2
 
   '@types/node@24.10.2':
     dependencies:
