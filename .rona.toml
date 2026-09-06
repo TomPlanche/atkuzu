@@ -49,11 +49,13 @@ commit_template = "{commit_type}({scope}): {message}"
 [[commit_extra_fields]]
 name = "scope"
 prompt = "Select scope"
-kind = "select"
+kind = "multi-select"
+separator = ","
 required = true
 prefetch.source = "command"
 prefetch.command = "git log -50 --pretty=format:%s"
 prefetch.extract_regex = "\\w+\\((?P<value>[^)]*)\\):"
+prefetch.item_regex = "[\\w-]+"
 prefetch.deduplicate = true
 
 # [[commit_extra_fields]]
