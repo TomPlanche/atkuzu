@@ -13,6 +13,7 @@ When logged in, `src/routes/daily/status/+server.ts` looks up the player's own P
 - [x] Schedule `scripts/generate-daily.ts` so tomorrow's archive is always published ahead of the UTC day boundary (`scripts/schedule-daily.ts`, run under pm2 via `ecosystem.config.cjs`).
 - [x] Add a streaks and history view backed by `localStorage` completions (`$lib/game/completions.ts`, `$lib/components/DailyHistory.svelte`, opened from the "History" button next to the size tabs). Streak arithmetic mirrors `nextStats` in `$lib/server/atproto/records.ts`.
 - [ ] Add an archive index (`/daily/index.json`) for browsing past days.
+- [x] Guard `DAILY_EPOCH_MS` (`$lib/game/daily.ts`) against drift from the actual archive: `pnpm run daily:check-epoch` fails if the earliest `static/daily/<date>.json` no longer maps to puzzle number 1. The epoch itself stays a hardcoded constant, never derived at runtime, since it feeds AT Protocol record keys already written to players' PDSes.
 - [x] Write the result to the player's PDS on completion (`src/routes/daily/complete/+server.ts`, `src/lib/server/atproto/records.ts`).
   - [x] Call `createRecord` for `com.tomplanche.atkuzu.result` when the player solves a daily, keyed by `<puzzleNumber>-<size>` so each size is recorded once.
   - [x] Skip the write when the player is not logged in.

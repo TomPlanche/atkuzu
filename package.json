@@ -25,7 +25,8 @@
     "lexicons:publish": "tsx scripts/publish-lexicons.ts",
     "records:delete": "tsx scripts/delete-record.ts",
     "daily:generate": "tsx scripts/generate-daily.ts",
-    "daily:schedule": "tsx scripts/schedule-daily.ts"
+    "daily:schedule": "tsx scripts/schedule-daily.ts",
+    "daily:check-epoch": "tsx scripts/check-daily-epoch.ts"
   },
   "dependencies": {
     "@atproto/api": "^0.18.6",
