@@ -61,8 +61,9 @@
     border-radius: var(--radius-md);
     background: transparent;
     width: 100%;
-    max-width: min(35rem, calc(100vw - 2rem));
-    overflow: visible;
+    max-width: min(45rem, calc(100vw - 2rem));
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
 
     &::backdrop {
       background: color-mix(in oklab, black 60%, transparent);

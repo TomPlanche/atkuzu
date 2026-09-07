@@ -10,6 +10,8 @@
     parseGrid
   } from "$lib/game/board";
   import { sha256Hex } from "$lib/game/hash";
+  import { createMoveHistory, type MoveHistory } from "$lib/game/history.svelte";
+  import { isRedoCombo, isUndoCombo } from "$lib/game/keys";
   import toast from "svelte-french-toast";
   import { toastErrorOptions, toastLoadingOptions, toastSuccessOptions } from "$lib/toast";
   import Board from "$lib/components/Board.svelte";
@@ -89,6 +91,12 @@
   const pdslsUrl = (did: string, rkey: string): string =>
     `https://pdsls.dev/at://${did}/com.tomplanche.atkuzu.result/${rkey}`;
 
+  // One undo/redo stack per size: session-only, like the timer/toggle count is not, so
+  // switching tabs (or reloading) starts that size's history fresh.
+  const histories: Record<DailySize, MoveHistory> = Object.fromEntries(
+    DAILY_SIZES.map((size) => [size, createMoveHistory()])
+  ) as Record<DailySize, MoveHistory>;
+
   const defaultSize: DailySize = 6;
   const initialProgress = progressFor(defaultSize);
 
@@ -130,8 +138,30 @@
       return;
     }
 
-    const current = board[r][c];
-    board[r][c] = current === null ? 0 : current === 0 ? 1 : null;
+    const prev = board[r][c];
+    const next = prev === null ? 0 : prev === 0 ? 1 : null;
+    board[r][c] = next;
+    toggleCount += 1;
+    histories[selectedSize].push({ r, c, prev, next });
+  };
+
+  const undo = () => {
+    const move = histories[selectedSize].undo();
+    if (!move) {
+      return;
+    }
+
+    board[move.r][move.c] = move.prev;
+    toggleCount = Math.max(0, toggleCount - 1);
+  };
+
+  const redo = () => {
+    const move = histories[selectedSize].redo();
+    if (!move) {
+      return;
+    }
+
+    board[move.r][move.c] = move.next;
     toggleCount += 1;
   };
 
@@ -139,6 +169,7 @@
     board = cloneGrid(entries[selectedSize].initial);
     toggleCount = 0;
     elapsedSeconds = 0;
+    histories[selectedSize].clear();
   };
 
   const formatTime = (total: number): string => {
@@ -298,6 +329,21 @@
         recording.delete(size);
       });
   });
+
+  $effect(() => {
+    const onKeydown = (event: KeyboardEvent) => {
+      if (isUndoCombo(event)) {
+        event.preventDefault();
+        undo();
+      } else if (isRedoCombo(event)) {
+        event.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener("keydown", onKeydown);
+    return () => window.removeEventListener("keydown", onKeydown);
+  });
 </script>
 
 {#snippet resetIcon()}
@@ -312,6 +358,36 @@
   >
     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
     <path d="M3 3v5h5" />
+  </svg>
+{/snippet}
+
+{#snippet undoIcon()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M9 14 4 9l5-5" />
+    <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+  </svg>
+{/snippet}
+
+{#snippet redoIcon()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="m15 14 5-5-5-5" />
+    <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
   </svg>
 {/snippet}
 
@@ -345,11 +421,33 @@
     </p>
   {:else}
     <div class="daily__actions">
-      <span class="stat">Time <strong>{formatTime(elapsedSeconds)}</strong></span>
-      <span class="stat">Toggles <strong>{toggleCount}</strong></span>
-      <Button type="button" icon={resetIcon} variant="secondary" letter="r" onclick={resetBoard}>
-        Reset
-      </Button>
+      <div class="daily__stats">
+        <span class="stat">Time <strong>{formatTime(elapsedSeconds)}</strong></span>
+        <span class="stat">Toggles <strong>{toggleCount}</strong></span>
+      </div>
+      <div class="daily__buttons">
+        <Button
+          disabled={!histories[selectedSize].canUndo}
+          icon={undoIcon}
+          onclick={undo}
+          type="button"
+          variant="secondary"
+        >
+          Undo
+        </Button>
+        <Button
+          disabled={!histories[selectedSize].canRedo}
+          icon={redoIcon}
+          onclick={redo}
+          type="button"
+          variant="secondary"
+        >
+          Redo
+        </Button>
+        <Button type="button" icon={resetIcon} variant="secondary" letter="r" onclick={resetBoard}>
+          Reset
+        </Button>
+      </div>
     </div>
 
     <Board
@@ -423,6 +521,18 @@
       margin-block-end: var(--space-6);
       font-size: 0.9rem;
       color: var(--muted);
+    }
+
+    &__stats {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    &__buttons {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
     }
   }
 

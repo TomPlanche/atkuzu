@@ -86,6 +86,11 @@
     <kbd>&larr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd> <kbd>&rarr;</kbd> move focus between cells.
   </li>
   <li><kbd>Enter</kbd> submits the puzzle once it's full.</li>
+  <li>
+    <kbd>Ctrl</kbd>+<kbd>Z</kbd> (<kbd>Cmd</kbd>+<kbd>Z</kbd> on Mac) undoes a move, <br />
+    <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> or <kbd>Ctrl</kbd>+<kbd>Y</kbd> redoes it. <br />
+    Or use the Undo/Redo buttons above the board.
+  </li>
 </ul>
 
 <style lang="scss">

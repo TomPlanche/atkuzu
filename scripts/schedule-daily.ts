@@ -6,7 +6,7 @@
  *
  * Paris is always ahead of UTC (CET/UTC+1 or CEST/UTC+2), so at French
  * midnight the Paris calendar date already equals the UTC date about to
- * start — that's the date we generate.
+ * start that's the date we generate.
  *
  * Requires ATKUZU_DAILY_SEED (read by generate-daily.ts itself via
  * dotenv/config; not needed by this process).

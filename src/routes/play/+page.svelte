@@ -1,12 +1,16 @@
 <script lang="ts">
   import { PUZZLE, SIZE, SOLUTION } from "$lib/game/samplePuzzle";
   import { type Cell, cloneGrid, computeInvalid, parseGrid } from "$lib/game/board";
+  import { createMoveHistory } from "$lib/game/history.svelte";
+  import { isRedoCombo, isUndoCombo } from "$lib/game/keys";
   import Board from "$lib/components/Board.svelte";
   import Button from "$lib/components/Button.svelte";
 
   const initialBoard: Cell[][] = parseGrid(PUZZLE);
   const given: boolean[][] = initialBoard.map((row) => row.map((c) => c !== null));
   const solution: Cell[][] = parseGrid(SOLUTION);
+
+  const history = createMoveHistory();
 
   let board = $state<Cell[][]>(cloneGrid(initialBoard));
   let toggleCount = $state(0);
@@ -24,8 +28,30 @@
       return;
     }
 
-    const current = board[r][c];
-    board[r][c] = current === null ? 0 : current === 0 ? 1 : null;
+    const prev = board[r][c];
+    const next = prev === null ? 0 : prev === 0 ? 1 : null;
+    board[r][c] = next;
+    toggleCount += 1;
+    history.push({ r, c, prev, next });
+  };
+
+  const undo = () => {
+    const move = history.undo();
+    if (!move) {
+      return;
+    }
+
+    board[move.r][move.c] = move.prev;
+    toggleCount = Math.max(0, toggleCount - 1);
+  };
+
+  const redo = () => {
+    const move = history.redo();
+    if (!move) {
+      return;
+    }
+
+    board[move.r][move.c] = move.next;
     toggleCount += 1;
   };
 
@@ -33,6 +59,7 @@
     board = cloneGrid(initialBoard);
     toggleCount = 0;
     elapsedSeconds = 0;
+    history.clear();
   };
 
   // Dev-only shortcut to skip straight to the win state while working on
@@ -60,6 +87,22 @@
     }, 1000);
 
     return () => clearInterval(timer);
+  });
+
+  $effect(() => {
+    const onKeydown = (event: KeyboardEvent) => {
+      if (isUndoCombo(event)) {
+        event.preventDefault();
+        undo();
+      } else if (isRedoCombo(event)) {
+        event.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener("keydown", onKeydown);
+
+    return () => window.removeEventListener("keydown", onKeydown);
   });
 </script>
 
@@ -92,21 +135,71 @@
   </svg>
 {/snippet}
 
+{#snippet undoIcon()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M9 14 4 9l5-5" />
+    <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+  </svg>
+{/snippet}
+
+{#snippet redoIcon()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="m15 14 5-5-5-5" />
+    <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
+  </svg>
+{/snippet}
+
 <section class="play">
   <div class="play__bar">
-    <span class="stat">Time <strong>{formatTime(elapsedSeconds)}</strong></span>
-    <span class="stat">Toggles <strong>{toggleCount}</strong></span>
+    <div class="play__stats">
+      <span class="stat">Time <strong>{formatTime(elapsedSeconds)}</strong></span>
+      <span class="stat">Toggles <strong>{toggleCount}</strong></span>
+    </div>
     <div class="play__actions">
       {#if import.meta.env.DEV}
         <Button variant="secondary" icon={resolveIcon} type="button" onclick={resolveNow}>
           Resolve
         </Button>
       {/if}
+      <Button
+        disabled={!history.canUndo}
+        icon={undoIcon}
+        onclick={undo}
+        type="button"
+        variant="secondary"
+      >
+        Undo
+      </Button>
+      <Button
+        disabled={!history.canRedo}
+        icon={redoIcon}
+        onclick={redo}
+        type="button"
+        variant="secondary"
+      >
+        Redo
+      </Button>
       <Button icon={resetIcon} onclick={resetBoard} type="button" variant="secondary">Reset</Button>
     </div>
   </div>
 
-  <Board size={SIZE} {board} {given} {invalid} solved={isSolved} oncellclick={cycleCell} />
+  <Board {board} {given} {invalid} oncellclick={cycleCell} size={SIZE} solved={isSolved} />
 
   <p aria-hidden={!isSolved} class="solved-banner" class:visible={isSolved}>
     <span class="solved-banner__pill">
@@ -132,6 +225,12 @@
       margin-block-end: var(--space-6);
       font-size: 0.9rem;
       color: var(--muted);
+    }
+
+    &__stats {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
     }
 
     &__actions {
