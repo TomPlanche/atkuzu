@@ -6,10 +6,12 @@ Board rendering and rule validation are shared with `/play` via `$lib/game/board
 
 Board progress persists per date and size in `localStorage`. No account required to play.
 
+When logged in, `src/routes/daily/status/+server.ts` looks up the player's own PDS for a `com.tomplanche.atkuzu.result` record for today, one deterministic `getRecord` call per size (rkeys are `<puzzleNumber>-<size>`, no `listRecords` scan needed). A match (e.g. the daily was already solved on another device) marks that size as solved here too, without needing the local board to actually be filled in: the client still never holds the solution, so a puzzle synced this way stops accepting input and shows the solved banner, but the grid itself isn't rendered filled.
+
 ## TODO
 
 - [x] Schedule `scripts/generate-daily.ts` so tomorrow's archive is always published ahead of the UTC day boundary (`scripts/schedule-daily.ts`, run under pm2 via `ecosystem.config.cjs`).
-- [ ] Add a streaks and history view backed by `localStorage` completions (design not started).
+- [x] Add a streaks and history view backed by `localStorage` completions (`$lib/game/completions.ts`, `$lib/components/DailyHistory.svelte`, opened from the "History" button next to the size tabs). Streak arithmetic mirrors `nextStats` in `$lib/server/atproto/records.ts`.
 - [ ] Add an archive index (`/daily/index.json`) for browsing past days.
 - [x] Write the result to the player's PDS on completion (`src/routes/daily/complete/+server.ts`, `src/lib/server/atproto/records.ts`).
   - [x] Call `createRecord` for `com.tomplanche.atkuzu.result` when the player solves a daily, keyed by `<puzzleNumber>-<size>` so each size is recorded once.

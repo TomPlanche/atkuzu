@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageProps } from "./$types";
-  import { DAILY_SIZES, type DailyPuzzle, type DailySize } from "$lib/game/daily";
+  import { DAILY_SIZES, type DailyPuzzle, type DailySize, puzzleNumber } from "$lib/game/daily";
   import {
     type Cell,
     chunkRows,
@@ -12,11 +12,15 @@
   import { sha256Hex } from "$lib/game/hash";
   import { createMoveHistory, type MoveHistory } from "$lib/game/history.svelte";
   import { isRedoCombo, isUndoCombo } from "$lib/game/keys";
+  import { recordCompletion } from "$lib/game/completions";
   import { pdslsRecordUrl } from "$lib/pdsls";
+  import { historyModal } from "$lib/state/history-modal.svelte";
   import toast from "svelte-french-toast";
   import { toastErrorOptions, toastLoadingOptions, toastSuccessOptions } from "$lib/toast";
   import Board from "$lib/components/Board.svelte";
   import Button from "$lib/components/Button.svelte";
+  import Modal from "$lib/components/Modal.svelte";
+  import DailyHistory from "$lib/components/DailyHistory.svelte";
 
   let { data }: PageProps = $props();
 
@@ -103,9 +107,14 @@
   let toggleCount = $state(initialProgress.toggleCount);
   let elapsedSeconds = $state(initialProgress.elapsedSeconds);
   let isSolved = $state(false);
+  // True per size once /daily/status finds an existing PDS record for it: solved on another
+  // device, logged in here. The client never holds the solution, so this can't make the
+  // grid itself look filled in, only stop play and show the banner (see `solved` below).
+  let completedElsewhere = $state<Record<DailySize, boolean>>({ 6: false, 8: false, 12: false });
   // Set once we know this puzzle's PDS record key, either from a fresh /daily/complete
-  // response or restored from localStorage. Null until then (not logged in, not yet sent,
-  // or solved before this link existed), in which case the banner just skips the link.
+  // response, restored from localStorage, or found by /daily/status. Null until then (not
+  // logged in, not yet sent, or solved before this link existed), in which case the banner
+  // just skips the link.
   let recordRkey = $state<string | null>(rkeyFor(defaultSize));
   // Deliberately a plain Set, not SvelteSet: the effect below both reads and mutates it,
   // and a reactive Set would re-trigger that same effect on every add()/delete(), which
@@ -132,9 +141,12 @@
   );
   const invalid = $derived(board.length > 0 ? computeInvalid(board, selectedSize) : []);
   const isRuleValid = $derived(invalid.every((row) => row.every((v) => !v)));
+  // Solved on this device (isSolved) or found already solved elsewhere: either way, play
+  // stops and the banner shows.
+  const solved = $derived(isSolved || completedElsewhere[selectedSize]);
 
   const cycleCell = (r: number, c: number) => {
-    if (given[r][c] || isSolved) {
+    if (given[r][c] || solved) {
       return;
     }
 
@@ -235,7 +247,7 @@
   });
 
   $effect(() => {
-    if (isSolved) {
+    if (solved) {
       return;
     }
 
@@ -330,6 +342,83 @@
       });
   });
 
+  // Local history, independent of login: every solve lands in $lib/game/completions'
+  // localStorage log, whether or not it also made it to the PDS above.
+  $effect(() => {
+    if (!isSolved) {
+      return;
+    }
+
+    recordCompletion({
+      date: data.date,
+      size: selectedSize,
+      puzzleNumber: puzzleNumber(data.date),
+      durationSeconds: elapsedSeconds,
+      toggleCount
+    });
+  });
+
+  // Cross-device sync: on login (or any fresh load while logged in), check the player's own
+  // PDS for a result already recorded today, e.g. from solving on another device, so it
+  // shows as solved here too instead of asking them to solve it again.
+  $effect(() => {
+    const date = data.date;
+    if (!data.session) {
+      return;
+    }
+
+    let cancelled = false;
+
+    fetch(`/daily/status?date=${date}`)
+      .then((res) => (res.ok ? res.json() : { results: {} }))
+      .then(
+        (result: {
+          results: Partial<
+            Record<DailySize, { rkey: string; durationSeconds: number; toggleCount: number }>
+          >;
+        }) => {
+          if (cancelled) {
+            return;
+          }
+
+          for (const size of DAILY_SIZES) {
+            const entry = result.results[size];
+            if (!entry) {
+              continue;
+            }
+
+            completedElsewhere[size] = true;
+
+            try {
+              localStorage.setItem(recordedKey(date, size), "1");
+              localStorage.setItem(rkeyStorageKey(size), entry.rkey);
+            } catch {
+              // localStorage unavailable; completedElsewhere still reflects it for this session.
+            }
+
+            recordCompletion({
+              date,
+              size,
+              puzzleNumber: puzzleNumber(date),
+              durationSeconds: entry.durationSeconds,
+              toggleCount: entry.toggleCount
+            });
+
+            if (size === selectedSize) {
+              recordRkey = entry.rkey;
+            }
+          }
+        }
+      )
+      .catch(() => {
+        // Best-effort sync; solving locally still works if this fails.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  });
+
   $effect(() => {
     const onKeydown = (event: KeyboardEvent) => {
       if (isUndoCombo(event)) {
@@ -395,22 +484,25 @@
   <div class="daily__bar">
     <h1>Daily <span class="daily__date">{data.date}</span></h1>
 
-    {#if data.daily}
-      <div class="daily__tabs" role="tablist" aria-label="Puzzle size">
-        {#each DAILY_SIZES as size (size)}
-          <button
-            type="button"
-            role="tab"
-            class="tab"
-            class:active={selectedSize === size}
-            aria-selected={selectedSize === size}
-            onclick={() => selectSize(size)}
-          >
-            {size}×{size}
-          </button>
-        {/each}
-      </div>
-    {/if}
+    <div class="daily__bar-right">
+      {#if data.daily}
+        <div class="daily__tabs" role="tablist" aria-label="Puzzle size">
+          {#each DAILY_SIZES as size (size)}
+            <button
+              type="button"
+              role="tab"
+              class="tab"
+              class:active={selectedSize === size}
+              aria-selected={selectedSize === size}
+              onclick={() => selectSize(size)}
+            >
+              {size}×{size}
+            </button>
+          {/each}
+        </div>
+      {/if}
+      <button class="history-btn" type="button" onclick={() => historyModal.show()}>History</button>
+    </div>
   </div>
 
   {#if !data.daily}
@@ -450,18 +542,15 @@
       </div>
     </div>
 
-    <Board
-      size={selectedSize}
-      {board}
-      {given}
-      {invalid}
-      solved={isSolved}
-      oncellclick={cycleCell}
-    />
+    <Board size={selectedSize} {board} {given} {invalid} {solved} oncellclick={cycleCell} />
 
-    <p aria-hidden={!isSolved} class="solved-banner" class:visible={isSolved}>
+    <p aria-hidden={!solved} class="solved-banner" class:visible={solved}>
       <span class="solved-banner__pill">
-        Solved today's {selectedSize}×{selectedSize}.
+        {#if isSolved}
+          Solved today's {selectedSize}×{selectedSize}.
+        {:else}
+          Already solved today's {selectedSize}×{selectedSize} on another device.
+        {/if}
         {#if recordUrl}
           <!-- recordUrl is always an absolute https://pdsls.dev/... URL, built in pdslsUrl() above -->
           <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
@@ -471,6 +560,10 @@
     </p>
   {/if}
 </section>
+
+<Modal bind:open={historyModal.open} labelledby="history-modal-title">
+  <DailyHistory />
+</Modal>
 
 <style lang="scss">
   .daily {
@@ -507,6 +600,12 @@
       font-weight: 400;
     }
 
+    &__bar-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+
     &__tabs {
       display: flex;
       gap: var(--space-2);
@@ -539,6 +638,20 @@
   .stat strong {
     color: white;
     font-family: var(--font-mono);
+  }
+
+  .history-btn {
+    border: none;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--muted);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--fg);
+    }
   }
 
   .tab {

@@ -17,7 +17,7 @@ type StatsValue = {
   lastPuzzleNumber?: number;
 };
 
-const isRecordNotFound = (err: unknown): boolean =>
+export const isRecordNotFound = (err: unknown): boolean =>
   typeof err === "object" && err !== null && (err as { error?: string }).error === "RecordNotFound";
 
 const isAlreadyExists = (err: unknown): boolean =>
