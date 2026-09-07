@@ -392,8 +392,15 @@
             try {
               localStorage.setItem(recordedKey(date, size), "1");
               localStorage.setItem(rkeyStorageKey(size), entry.rkey);
+              localStorage.setItem(
+                progressKey(size),
+                JSON.stringify({
+                  toggleCount: entry.toggleCount,
+                  elapsedSeconds: entry.durationSeconds
+                })
+              );
             } catch {
-              // localStorage unavailable; completedElsewhere still reflects it for this session.
+              // localStorage unavailable; the live state below still reflects it for this session.
             }
 
             recordCompletion({
@@ -406,6 +413,8 @@
 
             if (size === selectedSize) {
               recordRkey = entry.rkey;
+              toggleCount = entry.toggleCount;
+              elapsedSeconds = entry.durationSeconds;
             }
           }
         }
@@ -549,7 +558,7 @@
         {#if isSolved}
           Solved today's {selectedSize}×{selectedSize}.
         {:else}
-          Already solved today's {selectedSize}×{selectedSize} on another device.
+          Already solved today's {selectedSize}×{selectedSize}.
         {/if}
         {#if recordUrl}
           <!-- recordUrl is always an absolute https://pdsls.dev/... URL, built in pdslsUrl() above -->
