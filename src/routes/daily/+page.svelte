@@ -12,6 +12,7 @@
   import { sha256Hex } from "$lib/game/hash";
   import { createMoveHistory, type MoveHistory } from "$lib/game/history.svelte";
   import { isRedoCombo, isUndoCombo } from "$lib/game/keys";
+  import { pdslsRecordUrl } from "$lib/pdsls";
   import toast from "svelte-french-toast";
   import { toastErrorOptions, toastLoadingOptions, toastSuccessOptions } from "$lib/toast";
   import Board from "$lib/components/Board.svelte";
@@ -88,9 +89,6 @@
     }
   };
 
-  const pdslsUrl = (did: string, rkey: string): string =>
-    `https://pdsls.dev/at://${did}/com.tomplanche.atkuzu.result/${rkey}`;
-
   // One undo/redo stack per size: session-only, like the timer/toggle count is not, so
   // switching tabs (or reloading) starts that size's history fresh.
   const histories: Record<DailySize, MoveHistory> = Object.fromEntries(
@@ -128,7 +126,9 @@
   const given = $derived(entries[selectedSize].given);
   const isFull = $derived(board.length > 0 && board.every((row) => row.every((c) => c !== null)));
   const recordUrl = $derived(
-    data.session && recordRkey ? pdslsUrl(data.session.did, recordRkey) : null
+    data.session && recordRkey
+      ? pdslsRecordUrl(data.session.did, "com.tomplanche.atkuzu.result", recordRkey)
+      : null
   );
   const invalid = $derived(board.length > 0 ? computeInvalid(board, selectedSize) : []);
   const isRuleValid = $derived(invalid.every((row) => row.every((v) => !v)));

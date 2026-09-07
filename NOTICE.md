@@ -30,3 +30,5 @@ atkuzu is licensed under the terms in [LICENSE.md](LICENSE.md). It is forked fro
 ## Network services
 
 - **Bluesky public appview** (`public.api.bsky.app`): used by [HandleInput.svelte](src/lib/components/HandleInput.svelte) to search for AT Protocol handles during login. No auth, called client-side, results are not persisted beyond the recently-picked handles kept in the browser's `localStorage`.
+- **pdsls.dev**: linked from the header, once connected, and from a solved daily's banner, so a player can browse their own records on their PDS. No API calls: atkuzu only builds `https://pdsls.dev/at://...` URLs client-side ([$lib/pdsls.ts](src/lib/pdsls.ts)).
+  <https://pdsls.dev>.

@@ -4,6 +4,7 @@
   import Button from "$lib/components/Button.svelte";
   import { loginModal } from "$lib/state/login-modal.svelte";
   import { rulesModal } from "$lib/state/rules-modal.svelte";
+  import { pdslsProfileUrl } from "$lib/pdsls";
 
   type Props = {
     session: App.Session | null;
@@ -63,7 +64,17 @@
     </div>
     {#if session}
       <nav class="navbar">
-        <span class="welcome">{session.handle}</span>
+        <!-- pdslsProfileUrl always returns an absolute https://pdsls.dev/... URL -->
+        <!-- eslint-disable svelte/no-navigation-without-resolve -->
+        <a
+          class="welcome"
+          href={pdslsProfileUrl(session.did)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {session.handle}
+        </a>
+        <!-- eslint-enable svelte/no-navigation-without-resolve -->
         <form method="POST" action="/logout" use:enhance>
           <Button variant="secondary" icon={logoutIcon} type="submit">Log out</Button>
         </form>
@@ -139,5 +150,9 @@
   .welcome {
     color: var(--muted);
     font-size: 0.9rem;
+
+    &:hover {
+      color: var(--fg);
+    }
   }
 </style>
