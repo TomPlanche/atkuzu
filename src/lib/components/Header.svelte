@@ -3,6 +3,7 @@
   import { resolve } from "$app/paths";
   import Button from "$lib/components/Button.svelte";
   import { loginModal } from "$lib/state/login-modal.svelte";
+  import { rulesModal } from "$lib/state/rules-modal.svelte";
 
   type Props = {
     session: App.Session | null;
@@ -56,6 +57,9 @@
     <div class="site-header__left">
       <a class="brand" href={resolve("/")}>atkuzu</a>
       <a class="nav-link" href={resolve("/daily")}>Daily</a>
+      <button class="nav-link nav-link--btn" type="button" onclick={() => rulesModal.show()}>
+        How to play
+      </button>
     </div>
     {#if session}
       <nav class="navbar">
@@ -116,6 +120,14 @@
     &:hover {
       color: var(--fg);
     }
+  }
+
+  .nav-link--btn {
+    border: none;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    cursor: pointer;
   }
 
   .navbar {

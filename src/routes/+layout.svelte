@@ -8,9 +8,11 @@
   import { toastSuccessOptions } from "$lib/toast";
   import Modal from "$lib/components/Modal.svelte";
   import LoginForm from "$lib/components/LoginForm.svelte";
+  import HowToPlay from "$lib/components/HowToPlay.svelte";
   import Header from "$lib/components/Header.svelte";
   import Footer from "$lib/components/Footer.svelte";
   import { loginModal } from "$lib/state/login-modal.svelte";
+  import { rulesModal } from "$lib/state/rules-modal.svelte";
 
   let { children, data } = $props();
 
@@ -70,6 +72,10 @@
     Sign in with your <a href="https://atproto.com/">AT Protocol</a> handle.
   </p>
   <LoginForm />
+</Modal>
+
+<Modal bind:open={rulesModal.open} labelledby="rules-modal-title">
+  <HowToPlay />
 </Modal>
 
 <Footer />

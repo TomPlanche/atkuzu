@@ -61,7 +61,7 @@
     border-radius: var(--radius-md);
     background: transparent;
     width: 100%;
-    max-width: min(28rem, calc(100vw - 2rem));
+    max-width: min(35rem, calc(100vw - 2rem));
     overflow: visible;
 
     &::backdrop {
