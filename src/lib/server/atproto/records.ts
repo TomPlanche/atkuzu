@@ -2,7 +2,7 @@
 // completion. See src/routes/daily/README.md and the lexicons under lexicons/com/tomplanche/atkuzu/.
 
 import type { Agent } from "@atproto/api";
-import { type DailySize, puzzleNumber } from "$lib/game/daily";
+import { type DailySize, puzzleNumber, todayUtcDate } from "$lib/game/daily";
 import { logger } from "$lib/server/logger";
 
 export const RESULT_COLLECTION = "com.tomplanche.atkuzu.result";
@@ -55,10 +55,31 @@ const writeResult = async (
   }
 };
 
-const nextStats = (existing: StatsValue | null, num: number): Required<StatsValue> => {
+/**
+ * `num` is the puzzle just completed; `isCatchUp` means it's not today's puzzle, i.e. the
+ * player went back and solved a day they missed. A catch-up still counts as a game played,
+ * but it happened out of real time, so it must not start, extend, or break the streak of
+ * live, same-day plays, nor move `lastPuzzleNumber` (which anchors that streak) backward.
+ */
+const nextStats = (
+  existing: StatsValue | null,
+  num: number,
+  isCatchUp: boolean
+): Required<StatsValue> => {
   const gamesPlayed = (existing?.gamesPlayed ?? 0) + 1;
   const gamesWon = (existing?.gamesWon ?? 0) + 1;
-  const lastPuzzleNumber = existing?.lastPuzzleNumber;
+
+  if (isCatchUp) {
+    return {
+      currentStreak: existing?.currentStreak ?? 0,
+      maxStreak: existing?.maxStreak ?? 0,
+      gamesPlayed,
+      gamesWon,
+      lastPuzzleNumber: existing?.lastPuzzleNumber ?? 0
+    };
+  }
+
+  const lastPuzzleNumber = existing?.lastPuzzleNumber ?? 0;
 
   // Same day, another size solved: another game, but not another streak day.
   if (lastPuzzleNumber === num) {
@@ -71,7 +92,7 @@ const nextStats = (existing: StatsValue | null, num: number): Required<StatsValu
     };
   }
 
-  // Consecutive day continues the streak; any other gap (or no prior record) starts a new one.
+  // Consecutive day continues the streak; any other gap (or no prior live day) starts a new one.
   const currentStreak = lastPuzzleNumber === num - 1 ? (existing?.currentStreak ?? 0) + 1 : 1;
 
   return {
@@ -83,7 +104,14 @@ const nextStats = (existing: StatsValue | null, num: number): Required<StatsValu
   };
 };
 
-const writeStats = async (agent: Agent, did: string, num: number, isTest: boolean, now: string) => {
+const writeStats = async (
+  agent: Agent,
+  did: string,
+  num: number,
+  isCatchUp: boolean,
+  isTest: boolean,
+  now: string
+) => {
   let existing: StatsValue | null = null;
   try {
     const res = await agent.com.atproto.repo.getRecord({
@@ -106,7 +134,7 @@ const writeStats = async (agent: Agent, did: string, num: number, isTest: boolea
     validate: false,
     record: {
       $type: STATS_COLLECTION,
-      ...nextStats(existing, num),
+      ...nextStats(existing, num, isCatchUp),
       updatedAt: now,
       ...(isTest ? { test: true } : {})
     }
@@ -139,6 +167,8 @@ export const recordDailyCompletion = async (
   const num = puzzleNumber(date);
   const rkey = `${isTest ? "test-" : ""}${num}-${size}`;
   const now = new Date().toISOString();
+  // Solving anything but today's own puzzle is a catch-up on a missed day: see `nextStats`.
+  const isCatchUp = num !== puzzleNumber(todayUtcDate());
 
   const status = await writeResult(agent, did, rkey, {
     $type: RESULT_COLLECTION,
@@ -152,7 +182,7 @@ export const recordDailyCompletion = async (
     ...(isTest ? { test: true } : {})
   });
 
-  await writeStats(agent, did, num, isTest, now);
+  await writeStats(agent, did, num, isCatchUp, isTest, now);
 
   return { status, rkey };
 };

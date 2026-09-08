@@ -5,10 +5,13 @@
     open: boolean;
     labelledby?: string;
     onclose?: () => void;
+    /** Caps the modal to a narrower width, for content that doesn't need the default
+     *  form/text-sized box (e.g. a calendar). */
+    compact?: boolean;
     children: Snippet;
   };
 
-  let { open = $bindable(false), labelledby, onclose, children }: Props = $props();
+  let { open = $bindable(false), labelledby, onclose, compact = false, children }: Props = $props();
 
   let dialogEl: HTMLDialogElement | undefined = $state();
 
@@ -44,6 +47,7 @@
   aria-labelledby={labelledby}
   bind:this={dialogEl}
   class="modal"
+  class:modal--compact={compact}
   onclick={onDialogClick}
   onclose={onDialogClose}
 >
@@ -64,6 +68,10 @@
     max-width: min(45rem, calc(100vw - 2rem));
     max-height: calc(100vh - 4rem);
     overflow-y: auto;
+
+    &--compact {
+      max-width: min(24rem, calc(100vw - 2rem));
+    }
 
     &::backdrop {
       background: color-mix(in oklab, black 60%, transparent);

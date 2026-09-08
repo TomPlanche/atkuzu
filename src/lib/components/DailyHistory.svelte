@@ -1,26 +1,53 @@
 <script lang="ts">
-  import { DAILY_SIZES } from "$lib/game/daily";
+  import { resolve } from "$app/paths";
+  import { dailyIndexUrl, DAILY_SIZES, type DailyIndex } from "$lib/game/daily";
   import {
     type Completion,
     computeStreaks,
     groupByDay,
+    mergeArchiveDays,
     readCompletions
   } from "$lib/game/completions";
   import { historyModal } from "$lib/state/history-modal.svelte";
   import { TextMorph } from "torph/svelte";
 
   let completions = $state<Completion[]>(readCompletions());
+  // Every published day, not just ones already played, so a missed day still shows up to
+  // catch up on. null until the first fetch resolves; stays whatever it last was on a failed
+  // fetch (best-effort, same as the cross-device sync in DailyPuzzle.svelte).
+  let archiveDates = $state<string[] | null>(null);
+  let archiveLoading = $state(false);
 
   // Re-read on every open, not just on mount: a puzzle solved earlier in the session (or
-  // just now, before this modal was ever opened) needs a fresh read of the log.
+  // just now, before this modal was ever opened) needs a fresh read of the log. The archive
+  // index only needs fetching once; it's immutable except for new days appearing over time.
   $effect(() => {
-    if (historyModal.open) {
-      completions = readCompletions();
+    if (!historyModal.open) {
+      return;
     }
+
+    completions = readCompletions();
+
+    if (archiveDates !== null) {
+      return;
+    }
+
+    archiveLoading = true;
+    fetch(dailyIndexUrl())
+      .then((res) => (res.ok ? (res.json() as Promise<DailyIndex>) : { dates: [] }))
+      .then((index) => {
+        archiveDates = index.dates;
+      })
+      .catch(() => {
+        // Best-effort: the local/PDS-backed day list below still works without it.
+      })
+      .finally(() => {
+        archiveLoading = false;
+      });
   });
 
   const stats = $derived(computeStreaks(completions));
-  const days = $derived(groupByDay(completions));
+  const days = $derived(mergeArchiveDays(groupByDay(completions), archiveDates ?? []));
 
   const formatTime = (total: number): string => {
     const m = Math.floor(total / 60)
@@ -49,16 +76,22 @@
   </div>
 </div>
 
-{#if days.length === 0}
+{#if archiveLoading && days.length === 0}
+  <p class="empty">Loading…</p>
+{:else if days.length === 0}
   <p class="empty">No completions yet. Solve today's daily to start a streak.</p>
 {:else}
   <ul class="days">
     {#each days as day (day.date)}
       <li class="day">
-        <div class="day__date">
+        <a
+          class="day__date"
+          href={resolve("/daily/[date]", { date: day.date })}
+          onclick={() => historyModal.hide()}
+        >
           {day.date}
           <TextMorph class="day__num" text={`#${day.puzzleNumber}`} />
-        </div>
+        </a>
         <div class="day__sizes">
           {#each DAILY_SIZES as size (size)}
             {@const completion = day.sizes[size]}

@@ -10,8 +10,13 @@ import { DAILY_SIZES, type DailySize, puzzleNumber } from "$lib/game/daily";
 import { isRecordNotFound, RESULT_COLLECTION } from "$lib/server/atproto/records";
 import { logger } from "$lib/server/logger";
 
-type ResultEntry = { rkey: string; durationSeconds: number; toggleCount: number };
-type ResultValue = { durationSeconds?: number; toggleCount?: number };
+type ResultEntry = {
+  rkey: string;
+  durationSeconds: number;
+  toggleCount: number;
+  createdAt: string;
+};
+type ResultValue = { durationSeconds?: number; toggleCount?: number; createdAt?: string };
 
 export const GET: RequestHandler = async (event) => {
   const date = event.url.searchParams.get("date");
@@ -45,7 +50,8 @@ export const GET: RequestHandler = async (event) => {
         results[size] = {
           rkey,
           durationSeconds: value.durationSeconds ?? 0,
-          toggleCount: value.toggleCount ?? 0
+          toggleCount: value.toggleCount ?? 0,
+          createdAt: value.createdAt ?? `${date}T00:00:00.000Z`
         };
       } catch (err) {
         if (!isRecordNotFound(err)) {

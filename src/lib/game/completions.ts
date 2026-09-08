@@ -1,4 +1,4 @@
-import { type DailySize } from "$lib/game/daily";
+import { type DailySize, puzzleNumber } from "$lib/game/daily";
 
 export type Completion = {
   date: string;
@@ -6,7 +6,18 @@ export type Completion = {
   puzzleNumber: number;
   durationSeconds: number;
   toggleCount: number;
+  /** ISO timestamp of the actual completion, not the puzzle's own date. Compared against
+   *  `date` to tell a live, same-day solve from a catch-up on a missed day (see `computeStreaks`). */
+  completedAt: string;
 };
+
+/**
+ * Completed on the day its puzzle was published, not caught up on later. `completedAt` is
+ * missing on completions logged before this field existed; treat those as live rather than
+ * silently dropping pre-existing streaks over a data-shape gap.
+ */
+const isLive = (completion: Completion): boolean =>
+  (completion.completedAt?.slice(0, 10) ?? completion.date) === completion.date;
 
 const STORAGE_KEY = "atkuzu:daily:completions";
 
@@ -48,10 +59,12 @@ export type StreakStats = {
  * Mirrors the streak arithmetic in $lib/server/atproto/records.ts's `nextStats`, so this
  * client-only (no account needed) view agrees with the PDS-backed stats a logged-in player
  * sees: solving another size on the same day is another game but not another streak day, a
- * consecutive day continues the streak, and any other gap starts a new one.
+ * consecutive day continues the streak, and any other gap starts a new one. Catching up on a
+ * missed day (`!isLive`) still counts toward `gamesPlayed`, but is left out of the streak
+ * chain entirely: it must not bridge a gap, start one, or move `lastPuzzleNumber` at all.
  */
 export const computeStreaks = (completions: Completion[]): StreakStats => {
-  const sorted = completions.toSorted((a, b) => a.puzzleNumber - b.puzzleNumber);
+  const sorted = completions.filter(isLive).toSorted((a, b) => a.puzzleNumber - b.puzzleNumber);
 
   let currentStreak = 0;
   let maxStreak = 0;
@@ -67,7 +80,7 @@ export const computeStreaks = (completions: Completion[]): StreakStats => {
     lastPuzzleNumber = completion.puzzleNumber;
   }
 
-  return { currentStreak, maxStreak, gamesPlayed: sorted.length };
+  return { currentStreak, maxStreak, gamesPlayed: completions.length };
 };
 
 export type DayGroup = {
@@ -90,6 +103,23 @@ export const groupByDay = (completions: Completion[]): DayGroup[] => {
         puzzleNumber: completion.puzzleNumber,
         sizes: { [completion.size]: completion }
       });
+    }
+  }
+
+  return [...byDate.values()].toSorted((a, b) => b.puzzleNumber - a.puzzleNumber);
+};
+
+/**
+ * Fills in every published archive date (from `/daily/index.json`) that `days` doesn't
+ * already have a completion for, as an empty (all sizes unsolved) `DayGroup`, so the history
+ * view can show every day that exists to catch up on, not only the ones already played.
+ */
+export const mergeArchiveDays = (days: DayGroup[], archiveDates: string[]): DayGroup[] => {
+  const byDate = new Map(days.map((day) => [day.date, day]));
+
+  for (const date of archiveDates) {
+    if (!byDate.has(date)) {
+      byDate.set(date, { date, puzzleNumber: puzzleNumber(date), sizes: {} });
     }
   }
 

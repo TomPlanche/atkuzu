@@ -19,11 +19,16 @@
  * to generate; one output file is written per distinct day. Dailies are
  * immutable once published, so an existing static/daily/<date>.json is left
  * alone unless --force is given.
+ *
+ * Every run also rewrites static/daily/index.json (`{ dates: string[] }`,
+ * ascending) from a directory scan, so the archive index for `/daily`'s
+ * history browsing self-heals even if a file is ever added or removed by
+ * hand instead of through this script.
  */
 import "dotenv/config";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { DAILY_SIZES, type DailySize } from "../src/lib/game/daily";
@@ -132,3 +137,15 @@ for (const date of dates) {
   writeFileSync(outPath, `${JSON.stringify(file, null, 2)}\n`);
   console.log(`wrote ${outPath}`);
 }
+
+// Rebuild the archive index from what's actually on disk, not just the dates generated this
+// run, so it self-heals if a file was ever added or removed by hand.
+const dateFilePattern = /^(\d{4}-\d{2}-\d{2})\.json$/;
+const publishedDates = readdirSync(OUT_DIR)
+  .map((name) => name.match(dateFilePattern)?.[1])
+  .filter((d): d is string => d !== undefined)
+  .toSorted();
+
+const indexPath = resolve(OUT_DIR, "index.json");
+writeFileSync(indexPath, `${JSON.stringify({ dates: publishedDates }, null, 2)}\n`);
+console.log(`wrote ${indexPath} (${publishedDates.length} day(s))`);
