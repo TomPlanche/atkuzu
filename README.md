@@ -157,3 +157,9 @@ quick start guide.
 
 > The docker compose comes with Caddy, if you have another reverse proxy you can remove it from the docker compose and
 > just reverse proxy to port 3000. You may also have to adjust the Caddyfile depending on your setup.
+
+### Daily puzzle scheduling
+
+Generating and publishing each day's puzzle isn't handled by the SvelteKit process itself: it's a separate cron job on
+the VPS (Europe/Paris midnight, DST included), not something kept alive alongside the site. See
+[src/routes/daily/README.md](src/routes/daily/README.md) for what that job actually runs.

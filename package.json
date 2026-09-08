@@ -26,7 +26,6 @@
     "lexicons:publish": "tsx scripts/publish-lexicons.ts",
     "records:delete": "tsx scripts/delete-record.ts",
     "daily:generate": "tsx scripts/generate-daily.ts",
-    "daily:schedule": "tsx scripts/schedule-daily.ts",
     "daily:check-epoch": "tsx scripts/check-daily-epoch.ts",
     "daily:reveal": "tsx scripts/reveal-solution.ts",
     "wasm:build": "wasm-pack build takuzu-grid-factory --target web --out-dir ../src/lib/wasm/pkg"
@@ -44,7 +43,6 @@
     "@sveltejs/adapter-node": "^5.5.7",
     "better-sqlite3": "13.0.3",
     "bits-ui": "^2.19.0",
-    "node-schedule": "^2.1.1",
     "pino": "^10.3.1",
     "svelte-french-toast": "2.0.0-alpha.0",
     "torph": "^0.1.2"
@@ -57,7 +55,6 @@
     "@sveltejs/vite-plugin-svelte": "^7.3.0",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^26.4.1",
-    "@types/node-schedule": "^2.1.8",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
