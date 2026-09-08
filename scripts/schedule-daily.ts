@@ -49,6 +49,7 @@ const generateToday = () => {
   // players until the site is rebuilt and pm2 picks up that new build on restart.
   try {
     execFileSync("pnpm", ["run", "build"], { cwd: REPO_ROOT, stdio: "inherit" });
+    execFileSync("pm2", ["restart", "atkuzu"], { cwd: REPO_ROOT, stdio: "inherit" });
   } catch (error) {
     console.error(`[schedule-daily] rebuild/restart failed after generating ${date}:`, error);
   }

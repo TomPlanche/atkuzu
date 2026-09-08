@@ -124,9 +124,11 @@
 
     &__inner {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: var(--space-4);
+      row-gap: var(--space-2);
+      column-gap: var(--space-4);
       padding-block: var(--space-4);
     }
   }
@@ -134,13 +136,18 @@
   .site-header__left {
     display: flex;
     align-items: center;
-    gap: var(--space-6);
+    gap: var(--space-3);
+
+    @media (min-width: 640px) {
+      gap: var(--space-6);
+    }
   }
 
   .brand {
     font-weight: 700;
     font-size: 1.1rem;
     letter-spacing: -0.02em;
+    white-space: nowrap;
     color: var(--fg);
 
     &:hover {
@@ -150,6 +157,7 @@
 
   .nav-link {
     font-size: 0.9rem;
+    white-space: nowrap;
     color: var(--muted);
 
     &:hover {

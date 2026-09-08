@@ -27,8 +27,14 @@
 
     &__inner {
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
-      padding-block: var(--space-4);
+      row-gap: var(--space-2);
+      column-gap: var(--space-4);
+      padding-block-start: var(--space-4);
+      // The floating bottom toolbar on iOS Safari sits over content that runs flush to the
+      // viewport edge; env(safe-area-inset-bottom) is 0 on browsers that don't need it.
+      padding-block-end: max(var(--space-4), env(safe-area-inset-bottom));
       font-size: 1rem;
       color: var(--muted);
     }

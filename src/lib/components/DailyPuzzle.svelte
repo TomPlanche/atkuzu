@@ -708,10 +708,12 @@
 
     &__actions {
       display: flex;
+      flex-wrap: wrap;
       flex-shrink: 0;
       align-items: center;
       justify-content: space-between;
-      gap: var(--space-4);
+      row-gap: var(--space-2);
+      column-gap: var(--space-4);
       margin-block-end: var(--space-6);
       font-size: 0.9rem;
       color: var(--muted);
@@ -719,12 +721,14 @@
 
     &__stats {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: var(--space-4);
     }
 
     &__buttons {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: var(--space-2);
     }
