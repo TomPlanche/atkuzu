@@ -1,0 +1,6 @@
+# getrandom (transitive, via rand/rand_chacha) needs an explicit backend picked for
+# wasm32-unknown-unknown; "wasm_js" (crypto.getRandomValues) matches the wasm_js feature
+# enabled in Cargo.toml. Only wasm.rs's crate-type (cdylib) targets wasm32; the native CLI
+# bin is unaffected.
+[target.wasm32-unknown-unknown]
+rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]

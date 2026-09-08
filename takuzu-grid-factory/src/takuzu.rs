@@ -31,6 +31,29 @@ const UNKNOWN: u8 = 2;
 /// 26 s, 5 gives 16 s, 11 gives 9 s, and the curve flattens around 20. Small grids never go that deep.
 const PARALLEL_DEPTH: usize = 20;
 
+/// Runs both closures, on the rayon pool natively and sequentially on wasm32 (no native OS
+/// threads there without `SharedArrayBuffer` + Web Workers, which `/play`'s wasm build doesn't
+/// need: its max size is far below where this crate actually needs the parallelism).
+#[cfg(not(target_arch = "wasm32"))]
+fn join<F1, F2, R1, R2>(f1: F1, f2: F2) -> (R1, R2)
+where
+    F1: FnOnce() -> R1 + Send,
+    F2: FnOnce() -> R2 + Send,
+    R1: Send,
+    R2: Send,
+{
+    rayon::join(f1, f2)
+}
+
+#[cfg(target_arch = "wasm32")]
+fn join<F1, F2, R1, R2>(f1: F1, f2: F2) -> (R1, R2)
+where
+    F1: FnOnce() -> R1,
+    F2: FnOnce() -> R2,
+{
+    (f1(), f2())
+}
+
 /// Rejected grid size, with the offending value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InvalidSize(pub usize);
@@ -251,7 +274,7 @@ impl Takuzu {
         board[cell] = 1;
 
         if depth < PARALLEL_DEPTH {
-            rayon::join(
+            join(
                 || self.count(&zero, cap, found, depth + 1),
                 || self.count(&board, cap, found, depth + 1),
             );

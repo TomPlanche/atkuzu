@@ -1,6 +1,6 @@
 [package]
 name = "takuzu-grid-factory"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 
 
@@ -13,8 +13,27 @@ style = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 nursery = { level = "deny", priority = -1 }
 
+[lib]
+name = "takuzu_grid_factory"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "takuzu-grid-factory"
+path = "src/main.rs"
+
 [dependencies]
-clap = { version = "4.6.6", features = ["derive"] }
 rand = "0.10.2"
 rand_chacha = "0.10.0"
+
+# rayon needs native OS threads, so it must not even be resolved for wasm32; clap is only
+# used by the CLI bin, so it stays out of the wasm build's dependency graph too.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+clap = { version = "4.6.6", features = ["derive"] }
 rayon = "1.12.0"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+# rand/rand_chacha pull this in transitively (for OS-entropy reseeding, unused by wasm.rs's
+# always-explicit ChaCha8Rng::seed_from_u64), but it still needs a backend picked to compile
+# for wasm32 at all. See .cargo/config.toml for the matching `getrandom_backend` cfg.
+getrandom = { version = "0.4", features = ["wasm_js"] }

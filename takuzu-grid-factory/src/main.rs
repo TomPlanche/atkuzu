@@ -3,13 +3,11 @@
 //! Both the grid size and the random seed come from the command line, so a run is reproducible: the same seed and the
 //! same size always print the same puzzle and the same clues. See [`takuzu`] for the rules and the search itself.
 
-mod takuzu;
-
 use clap::Parser;
 use rand::{RngExt, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::process::ExitCode;
-use takuzu::{MAX_SIZE, MIN_SIZE, Takuzu};
+use takuzu_grid_factory::takuzu::{MAX_SIZE, MIN_SIZE, Takuzu};
 
 #[derive(Parser)]
 #[command(version, about = "Generates a Takuzu / Binairo puzzle and its solution")]

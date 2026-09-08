@@ -1,12 +1,10 @@
 // Types and helpers for ADR 0001: dailies are pre-generated offline and
 // published as immutable static JSON at /daily/<YYYY-MM-DD>.json.
 
-export type DailySize = 6 | 8 | 12;
-
-export const DAILY_SIZES: DailySize[] = [6, 8, 12];
+import type { BoardSize } from "$lib/game/board";
 
 export type DailyPuzzle = {
-  size: DailySize;
+  size: BoardSize;
   /** Provenance only, per the ADR. Not used by the client. A u64, so a decimal string (not a number) to keep full precision. */
   seed: string;
   puzzle: string;

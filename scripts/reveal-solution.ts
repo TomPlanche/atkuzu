@@ -21,8 +21,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import { chunkRows } from "../src/lib/game/board";
-import { DAILY_SIZES, type DailyFile, type DailySize } from "../src/lib/game/daily";
+import { BOARD_SIZES, type BoardSize, chunkRows } from "../src/lib/game/board";
+import type { DailyFile } from "../src/lib/game/daily";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const GENERATOR_DIR = resolve(HERE, "../takuzu-grid-factory");
@@ -39,10 +39,10 @@ if (!masterSeed) {
 // against it showing up as a literal argument here.
 const [dateArg, sizeArg] = process.argv.slice(2).filter((arg) => arg !== "--");
 const date = dateArg;
-const size = Number(sizeArg) as DailySize;
+const size = Number(sizeArg) as BoardSize;
 
-if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !DAILY_SIZES.includes(size)) {
-  console.error(`Usage: pnpm run daily:reveal -- <YYYY-MM-DD> <${DAILY_SIZES.join("|")}>`);
+if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !BOARD_SIZES.includes(size)) {
+  console.error(`Usage: pnpm run daily:reveal -- <YYYY-MM-DD> <${BOARD_SIZES.join("|")}>`);
   process.exit(1);
 }
 
@@ -52,7 +52,7 @@ if (!existsSync(GENERATOR_BIN)) {
 }
 
 /** Identical to generate-daily.ts's deriveSeed: must match to reproduce the same solution. */
-const deriveSeed = (d: string, s: DailySize): bigint => {
+const deriveSeed = (d: string, s: BoardSize): bigint => {
   const digest = createHash("sha256").update(`${masterSeed}:${d}:${s}`).digest("hex");
 
   return BigInt(`0x${digest.slice(0, 16)}`);

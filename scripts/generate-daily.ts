@@ -31,7 +31,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import { DAILY_SIZES, type DailySize } from "../src/lib/game/daily";
+import { BOARD_SIZES, type BoardSize } from "../src/lib/game/board";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const GENERATOR_DIR = resolve(HERE, "../takuzu-grid-factory");
@@ -57,7 +57,7 @@ const toUtcDate = (unixSeconds: number): string =>
   new Date(unixSeconds * 1000).toISOString().slice(0, 10);
 
 /** Deterministic per-(date, size) u64 seed. The master seed never appears in the published files. */
-const deriveSeed = (date: string, size: DailySize): bigint => {
+const deriveSeed = (date: string, size: BoardSize): bigint => {
   const digest = createHash("sha256").update(`${masterSeed}:${date}:${size}`).digest("hex");
 
   return BigInt(`0x${digest.slice(0, 16)}`);
@@ -66,7 +66,7 @@ const deriveSeed = (date: string, size: DailySize): bigint => {
 type Generated = { puzzle: string; solution: string };
 
 /** Runs the Rust generator for one (size, seed) and parses its plain-text report. */
-const runGenerator = (size: DailySize, seed: bigint): Generated => {
+const runGenerator = (size: BoardSize, seed: bigint): Generated => {
   const output = execFileSync(GENERATOR_BIN, ["--size", String(size), "--seed", seed.toString()], {
     encoding: "utf8"
   });
@@ -115,7 +115,7 @@ for (const date of dates) {
     process.exit(1);
   }
 
-  const puzzles = DAILY_SIZES.map((size) => {
+  const puzzles = BOARD_SIZES.map((size) => {
     const seed = deriveSeed(date, size);
     const { puzzle, solution } = runGenerator(size, seed);
 

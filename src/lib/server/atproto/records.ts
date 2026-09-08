@@ -2,7 +2,7 @@
 // completion. See src/routes/daily/README.md and the lexicons under lexicons/com/tomplanche/atkuzu/.
 
 import type { Agent } from "@atproto/api";
-import { type DailySize, puzzleNumber, todayUtcDate } from "$lib/game/daily";
+import { type BoardSize, puzzleNumber, todayUtcDate } from "$lib/game/daily";
 import { logger } from "$lib/server/logger";
 
 export const RESULT_COLLECTION = "com.tomplanche.atkuzu.result";
@@ -143,7 +143,7 @@ const writeStats = async (
 
 export type DailyCompletion = {
   date: string;
-  size: DailySize;
+  size: BoardSize;
   durationSeconds: number;
   toggleCount: number;
   /** Marks the write as test data (a `test-` rkey and a `test: true` field) instead of a real completion. */

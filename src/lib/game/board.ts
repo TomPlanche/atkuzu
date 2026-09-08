@@ -1,6 +1,11 @@
 // Shared Takuzu board logic used by both the random /play board and the
 // /daily boards. Pure, size-agnostic functions so the two routes can't drift.
 
+/** The only sizes `takuzu-grid-factory` is asked to generate, on either route. */
+export type BoardSize = 6 | 8 | 12;
+
+export const BOARD_SIZES: BoardSize[] = [6, 8, 12];
+
 export type Cell = 0 | 1 | null;
 
 export const parseRow = (row: string): Cell[] =>

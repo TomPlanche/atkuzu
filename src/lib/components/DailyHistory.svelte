@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
-  import { dailyIndexUrl, DAILY_SIZES, type DailyIndex } from "$lib/game/daily";
+  import { dailyIndexUrl, type DailyIndex } from "$lib/game/daily";
+  import { BOARD_SIZES } from "$lib/game/board";
   import {
     type Completion,
     computeStreaks,
@@ -93,7 +94,7 @@
           <TextMorph class="day__num" text={`#${day.puzzleNumber}`} />
         </a>
         <div class="day__sizes">
-          {#each DAILY_SIZES as size (size)}
+          {#each BOARD_SIZES as size (size)}
             {@const completion = day.sizes[size]}
             <div class="size-badge" class:solved={!!completion}>
               <span class="size-badge__label">{size}×{size}</span>

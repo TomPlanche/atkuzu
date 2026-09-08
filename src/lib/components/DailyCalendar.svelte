@@ -3,13 +3,8 @@
   import { resolve } from "$app/paths";
   import { Calendar } from "bits-ui";
   import { type DateValue, parseDate } from "@internationalized/date";
-  import {
-    DAILY_SIZES,
-    type DailyIndex,
-    dailyIndexUrl,
-    type DailySize,
-    todayUtcDate
-  } from "$lib/game/daily";
+  import { BOARD_SIZES, type BoardSize } from "$lib/game/board";
+  import { type DailyIndex, dailyIndexUrl, todayUtcDate } from "$lib/game/daily";
   import { type Completion, readCompletions } from "$lib/game/completions";
   import { calendarModal } from "$lib/state/calendar-modal.svelte";
 
@@ -42,12 +37,12 @@
     // Svelte*  variants, which only matter for mutations after the fact) is correct here.
     // oxlint-disable-next-line svelte/prefer-svelte-reactivity
     // eslint-disable-next-line svelte/prefer-svelte-reactivity
-    const map = new Map<string, Set<DailySize>>();
+    const map = new Map<string, Set<BoardSize>>();
 
     for (const completion of completions) {
       // oxlint-disable-next-line svelte/prefer-svelte-reactivity
       // eslint-disable-next-line svelte/prefer-svelte-reactivity
-      const sizes = map.get(completion.date) ?? new Set<DailySize>();
+      const sizes = map.get(completion.date) ?? new Set<BoardSize>();
       sizes.add(completion.size);
       map.set(completion.date, sizes);
     }
@@ -71,7 +66,7 @@
     if (solvedCount === 0) {
       return "unsolved";
     }
-    return solvedCount < DAILY_SIZES.length ? "partial" : "solved";
+    return solvedCount < BOARD_SIZES.length ? "partial" : "solved";
   };
 
   const dayClass = (iso: string): string => {
@@ -244,20 +239,24 @@
     color: var(--fg);
     cursor: pointer;
 
-    :global(svg) {
+    svg {
       width: 1rem;
       height: 1rem;
     }
+  }
 
-    &:hover:not([data-disabled]):not(:disabled) {
-      background: var(--surface-hover);
-    }
+  // Whole selector inside one :global(...), attribute included: these attributes are added
+  // at runtime by bits-ui, so Svelte's unused-CSS analysis can never prove them "used" from
+  // the static template. Left split (as `&[...]`) it still tries to prune the unprovable half
+  // of a comma list and corrupts the generated CSS doing it (svelte/e/css_unused_selector).
+  :global(.calendar__nav:hover:not([data-disabled]):not(:disabled)) {
+    background: var(--surface-hover);
+  }
 
-    &[data-disabled],
-    &:disabled {
-      opacity: 0.35;
-      cursor: default;
-    }
+  :global(.calendar__nav[data-disabled]),
+  :global(.calendar__nav:disabled) {
+    opacity: 0.35;
+    cursor: default;
   }
 
   :global(.calendar__grid) {
@@ -301,25 +300,27 @@
     color: var(--fg);
     background: var(--surface);
     cursor: pointer;
+  }
 
-    &:hover:not([data-disabled]) {
-      background: var(--surface-hover);
-    }
+  // Same reasoning as .calendar__nav above: whole selector inside one :global(...), so
+  // Svelte's unused-CSS pruning never touches these bits-ui-added runtime attributes.
+  :global(.cell__day:hover:not([data-disabled])) {
+    background: var(--surface-hover);
+  }
 
-    &[data-outside-month] {
-      opacity: 0.35;
-    }
+  :global(.cell__day[data-outside-month]) {
+    opacity: 0.35;
+  }
 
-    &[data-disabled] {
-      color: var(--muted);
-      background: none;
-      cursor: default;
-      pointer-events: none;
-    }
+  :global(.cell__day[data-disabled]) {
+    color: var(--muted);
+    background: none;
+    cursor: default;
+    pointer-events: none;
+  }
 
-    &[data-today] {
-      box-shadow: inset 0 0 0 1px var(--muted);
-    }
+  :global(.cell__day[data-today]) {
+    box-shadow: inset 0 0 0 1px var(--muted);
   }
 
   // The page's own date (the `date` prop), separate from [data-today] above: this calendar

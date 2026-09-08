@@ -6,9 +6,10 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { env } from "$env/dynamic/private";
-import { DAILY_SIZES, type DailySize, puzzleNumber } from "$lib/game/daily";
+import { puzzleNumber } from "$lib/game/daily";
 import { isRecordNotFound, RESULT_COLLECTION } from "$lib/server/atproto/records";
 import { logger } from "$lib/server/logger";
+import { BOARD_SIZES, type BoardSize } from "$lib/game/board";
 
 type ResultEntry = {
   rkey: string;
@@ -33,10 +34,10 @@ export const GET: RequestHandler = async (event) => {
   const num = puzzleNumber(date);
   const isTest = env.DEV !== undefined;
 
-  const results: Partial<Record<DailySize, ResultEntry>> = {};
+  const results: Partial<Record<BoardSize, ResultEntry>> = {};
 
   await Promise.all(
-    DAILY_SIZES.map(async (size) => {
+    BOARD_SIZES.map(async (size) => {
       const rkey = `${isTest ? "test-" : ""}${num}-${size}`;
 
       try {

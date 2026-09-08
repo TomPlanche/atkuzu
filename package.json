@@ -7,6 +7,7 @@
     "dev": "vite dev",
     "dev:logging": "vite dev | pino-pretty",
     "build": "vite build",
+    "build:all": "vite build && pnpm wasm:build",
     "preview": "vite preview",
     "start": "vite start",
     "prepare": "svelte-kit sync || echo ''",
@@ -27,7 +28,8 @@
     "daily:generate": "tsx scripts/generate-daily.ts",
     "daily:schedule": "tsx scripts/schedule-daily.ts",
     "daily:check-epoch": "tsx scripts/check-daily-epoch.ts",
-    "daily:reveal": "tsx scripts/reveal-solution.ts"
+    "daily:reveal": "tsx scripts/reveal-solution.ts",
+    "wasm:build": "wasm-pack build takuzu-grid-factory --target web --out-dir ../src/lib/wasm/pkg"
   },
   "dependencies": {
     "@atproto/api": "^0.20.42",

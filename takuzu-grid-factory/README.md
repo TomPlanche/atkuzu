@@ -4,6 +4,8 @@ A Takuzu (Binairo) puzzle generator, written in Rust.
 
 The program builds a complete grid, then removes cells for as long as the puzzle keeps a single solution. It handles every even size from 6x6 to 16x16. The grid size and the random seed both come from the command line, so any run can be replayed.
 
+The generation logic (`src/takuzu.rs`) is a library, `takuzu_grid_factory`, shared by two front ends: the CLI below (`src/main.rs`, generates atkuzu's `/daily` archive offline) and a wasm build (`src/wasm.rs`, generates atkuzu's `/play` puzzles client-side, see [wasm](#wasm)).
+
 ## The rules
 
 A complete Takuzu grid follows three rules:
@@ -95,6 +97,28 @@ That tree is very uneven, so a shallow cut leaves one thread with most of the wo
 
 The counter of solutions is atomic, and the cap only clamps the value the caller reads. Two threads can therefore pass the cap together without any change to the answer.
 
+## wasm
+
+`wasm32-unknown-unknown` has no OS threads without `SharedArrayBuffer`, Web Workers, and cross-origin isolation headers on the page serving it. That's more than atkuzu's `/play` needs just to generate a puzzle, so the wasm build drops rayon instead: `join` (the single call site above, in `count`) is `rayon::join` natively and a plain sequential `(f1(), f2())` on `wasm32`, chosen by `cfg(target_arch)`. `rayon` itself, and `clap` (CLI-only), are excluded from that target's dependency graph entirely, in `Cargo.toml`'s `[target.'cfg(...)'.dependencies]`.
+
+This costs real time only on the sizes rayon exists for. `/play` tops out at 12x12, and 6x6 to 12x12 are already under 0.02 s **parallel** (see [Speed](#speed)). Single-threaded wasm measures **~250 ms** for a 12x12 dig in-browser, still well under anything a player would notice. Revisit this if `/play` ever offers 14x14 or 16x16, where the table above shows rayon earning its keep.
+
+```sh
+wasm-pack build --target web --out-dir ../src/lib/wasm/pkg
+# from the workspace root: pnpm run wasm:build
+```
+
+`src/wasm.rs` exports one function:
+
+```rust
+pub fn generate_puzzle(size: usize, seed: u64) -> Result<GeneratedPuzzle, JsError>;
+// GeneratedPuzzle { puzzle: String, solution: String }, flat, row-major, `.` for a hidden cell
+```
+
+It's `generate` + `dig`, so it always returns the *hardest* puzzle for that seed (dig is minimal by inclusion, see [How it works](#how-it-works)). This crate rates no difficulty (see [Limits](#limits)), and doesn't need to: atkuzu's `/play` reveals extra clues back over the result client-side for its easier tiers, since adding clues can only narrow a solution set, never break its uniqueness.
+
+`rand`/`rand_chacha` pull in `getrandom` transitively (for OS-entropy reseeding, unused here: `wasm.rs` always seeds explicitly from the `seed` argument), which still needs a backend picked to compile for `wasm32` at all: the `wasm_js` feature in `Cargo.toml`, paired with the `--cfg getrandom_backend="wasm_js"` rustflag in `.cargo/config.toml`.
+
 ## What changed since v0.1
 
 Version 0.1 enumerated every complete 6x6 grid: 11,222 grids without rule 3, and 4,140 with it. The whole table took 33,120 bytes, and a mask plus a scan answered every question. That approach dies with the grid size, because the number of complete grids explodes.
@@ -121,6 +145,7 @@ The suite counts every complete 6x6 grid with the current solver. It finds 4,140
 - A 16x16 run can take 20 s on an unlucky seed. The dig is the part that pays.
 - The digger is greedy. It gives a puzzle where no clue is redundant, not the puzzle with the fewest clues.
 - The program rates no difficulty. Two puzzles of the same size can ask for very different work.
+- The wasm build (see [wasm](#wasm)) is single-threaded: the numbers in [Speed](#speed) and [Parallelism](#parallelism) don't apply to it above the sizes it's actually used for.
 
 ## Background
 

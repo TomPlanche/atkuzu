@@ -8,6 +8,9 @@ node_modules
 /.svelte-kit
 /build
 
+# wasm build artifact (takuzu-grid-factory compiled for /play; `pnpm run wasm:build`)
+/src/lib/wasm/pkg
+
 # OS
 .DS_Store
 Thumbs.db

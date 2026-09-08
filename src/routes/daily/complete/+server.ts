@@ -5,14 +5,15 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { env } from "$env/dynamic/private";
-import { DAILY_SIZES, type DailyFile, dailyFileUrl, type DailySize } from "$lib/game/daily";
+import { type DailyFile, dailyFileUrl } from "$lib/game/daily";
 import { sha256Hex } from "$lib/game/hash";
 import { recordDailyCompletion } from "$lib/server/atproto/records";
 import { logger } from "$lib/server/logger";
+import { BOARD_SIZES, type BoardSize } from "$lib/game/board";
 
 type Body = {
   date: string;
-  size: DailySize;
+  size: BoardSize;
   /** Row-major, no separators, `0`/`1` only, see $lib/game/board.ts's encodeGrid. */
   board: string;
   durationSeconds: number;
@@ -22,7 +23,7 @@ type Body = {
 const isValidBody = (body: Partial<Body>): body is Body =>
   typeof body.date === "string" &&
   /^\d{4}-\d{2}-\d{2}$/.test(body.date) &&
-  DAILY_SIZES.includes(body.size as DailySize) &&
+  BOARD_SIZES.includes(body.size as BoardSize) &&
   typeof body.board === "string" &&
   typeof body.durationSeconds === "number" &&
   body.durationSeconds >= 0 &&

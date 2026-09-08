@@ -1,12 +1,8 @@
 <script lang="ts">
+  import { type DailyFile, type DailyPuzzle, puzzleNumber } from "$lib/game/daily";
   import {
-    DAILY_SIZES,
-    type DailyFile,
-    type DailyPuzzle,
-    type DailySize,
-    puzzleNumber
-  } from "$lib/game/daily";
-  import {
+    BOARD_SIZES,
+    type BoardSize,
     type Cell,
     chunkRows,
     cloneGrid,
@@ -44,19 +40,19 @@
     given: boolean[][];
   };
 
-  const entries: Record<DailySize, SizeEntry> = Object.fromEntries(
-    DAILY_SIZES.map((size) => {
+  const entries: Record<BoardSize, SizeEntry> = Object.fromEntries(
+    BOARD_SIZES.map((size) => {
       const puzzle = daily?.puzzles.find((p) => p.size === size);
       const initial = puzzle ? parseGrid(chunkRows(puzzle.puzzle, size)) : [];
       const given = initial.map((row) => row.map((c) => c !== null));
 
       return [size, { puzzle, initial, given }];
     })
-  ) as Record<DailySize, SizeEntry>;
+  ) as Record<BoardSize, SizeEntry>;
 
-  const storageKey = (size: DailySize) => `atkuzu:daily:${date}:${size}`;
+  const storageKey = (size: BoardSize) => `atkuzu:daily:${date}:${size}`;
 
-  const readStoredBoard = (size: DailySize): Cell[][] | null => {
+  const readStoredBoard = (size: BoardSize): Cell[][] | null => {
     if (typeof localStorage === "undefined") {
       return null;
     }
@@ -74,7 +70,7 @@
     }
   };
 
-  const boardFor = (size: DailySize): Cell[][] => {
+  const boardFor = (size: BoardSize): Cell[][] => {
     const entry = entries[size];
     if (!entry.puzzle) {
       return [];
@@ -85,9 +81,9 @@
 
   type Progress = { toggleCount: number; elapsedSeconds: number };
 
-  const progressKey = (size: DailySize) => `atkuzu:daily:${date}:${size}:progress`;
+  const progressKey = (size: BoardSize) => `atkuzu:daily:${date}:${size}:progress`;
 
-  const progressFor = (size: DailySize): Progress => {
+  const progressFor = (size: BoardSize): Progress => {
     try {
       const raw = localStorage.getItem(progressKey(size));
 
@@ -97,9 +93,9 @@
     }
   };
 
-  const rkeyStorageKey = (size: DailySize) => `atkuzu:daily:${date}:${size}:rkey`;
+  const rkeyStorageKey = (size: BoardSize) => `atkuzu:daily:${date}:${size}:rkey`;
 
-  const rkeyFor = (size: DailySize): string | null => {
+  const rkeyFor = (size: BoardSize): string | null => {
     try {
       return localStorage.getItem(rkeyStorageKey(size));
     } catch {
@@ -109,14 +105,14 @@
 
   // One undo/redo stack per size: session-only, like the timer/toggle count is not, so
   // switching tabs (or reloading) starts that size's history fresh.
-  const histories: Record<DailySize, MoveHistory> = Object.fromEntries(
-    DAILY_SIZES.map((size) => [size, createMoveHistory()])
-  ) as Record<DailySize, MoveHistory>;
+  const histories: Record<BoardSize, MoveHistory> = Object.fromEntries(
+    BOARD_SIZES.map((size) => [size, createMoveHistory()])
+  ) as Record<BoardSize, MoveHistory>;
 
-  const defaultSize: DailySize = 6;
+  const defaultSize: BoardSize = 6;
   const initialProgress = progressFor(defaultSize);
 
-  let selectedSize = $state<DailySize>(defaultSize);
+  let selectedSize = $state<BoardSize>(defaultSize);
   let board = $state<Cell[][]>(boardFor(defaultSize));
   let toggleCount = $state(initialProgress.toggleCount);
   let elapsedSeconds = $state(initialProgress.elapsedSeconds);
@@ -125,7 +121,7 @@
   // already (another device, or a prior session on this one). The client never holds the
   // solution, so this can't make the grid itself look filled in, only stop play and show the
   // banner (see `solved` below).
-  let completedElsewhere = $state<Record<DailySize, boolean>>({ 6: false, 8: false, 12: false });
+  let completedElsewhere = $state<Record<BoardSize, boolean>>({ 6: false, 8: false, 12: false });
   // Set once we know this puzzle's PDS record key, either from a fresh /daily/complete
   // response, restored from localStorage, or found by /daily/status. Null until then (not
   // logged in, not yet sent, or solved before this link existed), in which case the banner
@@ -136,9 +132,9 @@
   // turned a single failed submit into an instant infinite retry loop.
   // oxlint-disable-next-line svelte/prefer-svelte-reactivity
   // eslint-disable-next-line svelte/prefer-svelte-reactivity
-  const recording = new Set<DailySize>();
+  const recording = new Set<BoardSize>();
 
-  const selectSize = (size: DailySize) => {
+  const selectSize = (size: BoardSize) => {
     selectedSize = size;
     board = boardFor(size);
     const progress = progressFor(size);
@@ -208,7 +204,7 @@
     return `${m}:${s}`;
   };
 
-  const recordedKey = (d: string, size: DailySize) => `atkuzu:daily:${d}:${size}:recorded`;
+  const recordedKey = (d: string, size: BoardSize) => `atkuzu:daily:${d}:${size}:recorded`;
 
   $effect(() => {
     const entry = entries[selectedSize];
@@ -393,7 +389,7 @@
         (result: {
           results: Partial<
             Record<
-              DailySize,
+              BoardSize,
               { rkey: string; durationSeconds: number; toggleCount: number; createdAt: string }
             >
           >;
@@ -402,7 +398,7 @@
             return;
           }
 
-          for (const size of DAILY_SIZES) {
+          for (const size of BOARD_SIZES) {
             const entry = result.results[size];
             if (!entry) {
               continue;
@@ -533,10 +529,10 @@
     <h1 class="daily__title">
       Daily
       <button
-        type="button"
+        aria-haspopup="dialog"
         class="daily__date"
         onclick={() => calendarModal.show()}
-        aria-haspopup="dialog"
+        type="button"
       >
         {date}
         <span class="daily__date-icon">{@render calendarIcon()}</span>
@@ -546,7 +542,7 @@
     <div class="daily__bar-right">
       {#if daily}
         <div class="daily__tabs" role="tablist" aria-label="Puzzle size">
-          {#each DAILY_SIZES as size (size)}
+          {#each BOARD_SIZES as size (size)}
             <button
               type="button"
               role="tab"
@@ -560,7 +556,7 @@
           {/each}
         </div>
       {/if}
-      <button class="history-btn" type="button" onclick={() => historyModal.show()}>History</button>
+      <button class="history-btn" onclick={() => historyModal.show()} type="button">History</button>
     </div>
   </div>
 
@@ -624,7 +620,7 @@
   <DailyHistory />
 </Modal>
 
-<Modal bind:open={calendarModal.open} labelledby="calendar-modal-title" compact>
+<Modal bind:open={calendarModal.open} compact labelledby="calendar-modal-title">
   <DailyCalendar {date} />
 </Modal>
 

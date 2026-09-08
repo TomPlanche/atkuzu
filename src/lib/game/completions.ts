@@ -1,8 +1,9 @@
-import { type DailySize, puzzleNumber } from "$lib/game/daily";
+import { puzzleNumber } from "$lib/game/daily";
+import type { BoardSize } from "$lib/game/board";
 
 export type Completion = {
   date: string;
-  size: DailySize;
+  size: BoardSize;
   puzzleNumber: number;
   durationSeconds: number;
   toggleCount: number;
@@ -86,7 +87,7 @@ export const computeStreaks = (completions: Completion[]): StreakStats => {
 export type DayGroup = {
   date: string;
   puzzleNumber: number;
-  sizes: Partial<Record<DailySize, Completion>>;
+  sizes: Partial<Record<BoardSize, Completion>>;
 };
 
 /** Groups completions by date, most recent day first. */
