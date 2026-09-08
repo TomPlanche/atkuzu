@@ -174,6 +174,37 @@
       focusIndex = -1;
     }
   };
+
+  // Positioned in the viewport (not relative to the input) so it never gets folded into a
+  // scrollable ancestor's overflow region: inside the login modal, a `position: absolute`
+  // dropdown was measured as part of the dialog's own `overflow-y: auto` content instead of
+  // floating over it, so "Recent" only showed up if you scrolled the (visually static) modal.
+  let dropdownPos = $state<{ top: number; left: number; width: number } | null>(null);
+
+  const updateDropdownPos = () => {
+    if (!container) {
+      return;
+    }
+
+    const rect = container.getBoundingClientRect();
+    dropdownPos = { top: rect.bottom, left: rect.left, width: rect.width };
+  };
+
+  $effect(() => {
+    if (!open) {
+      return;
+    }
+
+    updateDropdownPos();
+
+    window.addEventListener("resize", updateDropdownPos);
+    window.addEventListener("scroll", updateDropdownPos, true);
+
+    return () => {
+      window.removeEventListener("resize", updateDropdownPos);
+      window.removeEventListener("scroll", updateDropdownPos, true);
+    };
+  });
 </script>
 
 <svelte:window onclick={onWindowClick} />
@@ -197,8 +228,15 @@
     aria-autocomplete="list"
   />
 
-  {#if open && items.length > 0}
-    <ul class="dropdown" id={`${id}-listbox`} role="listbox">
+  {#if open && items.length > 0 && dropdownPos}
+    <ul
+      class="dropdown"
+      id={`${id}-listbox`}
+      role="listbox"
+      style:top="{dropdownPos.top}px"
+      style:left="{dropdownPos.left}px"
+      style:width="{dropdownPos.width}px"
+    >
       {#if showingRecent}
         <li class="dropdown-header">Recent</li>
       {/if}
@@ -245,12 +283,13 @@
     width: 100%;
   }
 
+  // Fixed, not absolute: its top/left/width come from the input's own getBoundingClientRect
+  // (see updateDropdownPos), so it floats over the page instead of expanding a scrollable
+  // ancestor's content box (that was the bug in the login modal: Modal.svelte's dialog has
+  // overflow-y: auto, which folded this in as hidden, scroll-to-reveal content).
   .dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 10;
+    position: fixed;
+    z-index: 1000;
     margin: 2px 0 0;
     padding: 4px;
     list-style: none;
