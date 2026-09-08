@@ -7,7 +7,7 @@
     "dev": "vite dev",
     "dev:logging": "vite dev | pino-pretty",
     "build": "vite build",
-    "build:all": "vite build && pnpm wasm:build",
+    "build:all": "pnpm wasm:build && vite build",
     "preview": "vite preview",
     "start": "vite start",
     "prepare": "svelte-kit sync || echo ''",
