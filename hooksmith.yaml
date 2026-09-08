@@ -3,3 +3,7 @@ pre-commit:
   commands:
     - pnpm run format:check
     - pnpm run lint
+    - pnpm run check
+pre-push:
+  commands:
+    - pnpm run build:all
