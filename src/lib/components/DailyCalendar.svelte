@@ -4,7 +4,7 @@
   import { Calendar } from "bits-ui";
   import { type DateValue, parseDate } from "@internationalized/date";
   import { BOARD_SIZES, type BoardSize } from "$lib/game/board";
-  import { type DailyIndex, dailyIndexUrl, todayUtcDate } from "$lib/game/daily";
+  import { type DailyIndex, dailyIndexUrl, todayParisDate } from "$lib/game/daily";
   import { type Completion, readCompletions } from "$lib/game/completions";
   import { calendarModal } from "$lib/state/calendar-modal.svelte";
 
@@ -15,7 +15,7 @@
 
   let { date }: Props = $props();
 
-  const today = todayUtcDate();
+  const today = todayParisDate();
   const maxValue = parseDate(today);
 
   /** `DateValue` is zoneless, so this is exactly the `YYYY-MM-DD` our own dates use. */

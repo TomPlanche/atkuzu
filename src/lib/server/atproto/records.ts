@@ -2,7 +2,7 @@
 // completion. See src/routes/daily/README.md and the lexicons under lexicons/com/tomplanche/atkuzu/.
 
 import type { Agent } from "@atproto/api";
-import { puzzleNumber, todayUtcDate } from "$lib/game/daily";
+import { puzzleNumber, todayParisDate } from "$lib/game/daily";
 import { logger } from "$lib/server/logger";
 import type { BoardSize } from "$lib/game/board";
 
@@ -169,7 +169,7 @@ export const recordDailyCompletion = async (
   const rkey = `${isTest ? "test-" : ""}${num}-${size}`;
   const now = new Date().toISOString();
   // Solving anything but today's own puzzle is a catch-up on a missed day: see `nextStats`.
-  const isCatchUp = num !== puzzleNumber(todayUtcDate());
+  const isCatchUp = num !== puzzleNumber(todayParisDate());
 
   const status = await writeResult(agent, did, rkey, {
     $type: RESULT_COLLECTION,

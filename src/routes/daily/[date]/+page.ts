@@ -2,7 +2,7 @@
 // for catching up on a missed day (see src/routes/daily/README.md).
 
 import { error, redirect } from "@sveltejs/kit";
-import { dailyFileUrl, todayUtcDate, type DailyFile } from "$lib/game/daily";
+import { dailyFileUrl, todayParisDate, type DailyFile } from "$lib/game/daily";
 import type { PageLoad } from "./$types";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -14,7 +14,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
     return error(404, "not found");
   }
 
-  const today = todayUtcDate();
+  const today = todayParisDate();
   if (date === today) {
     return redirect(308, "/daily");
   }

@@ -18,8 +18,18 @@ export type DailyFile = {
   puzzles: DailyPuzzle[];
 };
 
-/** Today's date at the UTC day boundary, as `YYYY-MM-DD`. */
-export const todayUtcDate = (): string => new Date().toISOString().slice(0, 10);
+/**
+ * Today's date at the Europe/Paris day boundary, as `YYYY-MM-DD`.
+ *
+ * Was UTC (day flips at 00:00 UTC, same instant for everyone); switched to a fixed
+ * reference zone instead, since puzzles are generated ahead of that boundary anyway (see
+ * scripts/generate-daily.ts's own Europe/Paris-derived timestamp), and a UTC "today" left
+ * the site showing yesterday's puzzle for up to two hours after it was already generated
+ * and sitting on disk. Still one shared day for every player regardless of their own
+ * timezone, just anchored to Paris instead of UTC; see src/routes/daily/README.md.
+ */
+export const todayParisDate = (): string =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
 
 export const dailyFileUrl = (date: string): string => `/daily/${date}.json`;
 
@@ -28,12 +38,16 @@ export type DailyIndex = { dates: string[] };
 
 export const dailyIndexUrl = (): string => "/daily/index.json";
 
-/** Day 1 of the shared daily series (UTC), matching the first published archive. */
+/** Day 1 of the shared daily series, matching the first published archive. */
 const DAILY_EPOCH_MS = Date.parse("2026-09-07T00:00:00Z");
 
 /**
- * Daily puzzle index = whole UTC days since the shared epoch, +1. Launch day = 1.
- * Matches the `puzzleNumber` field of `com.tomplanche.atkuzu.result`.
+ * Daily puzzle index = whole calendar days between `date` and the shared epoch, +1.
+ * Launch day = 1. Matches the `puzzleNumber` field of `com.tomplanche.atkuzu.result`.
+ *
+ * The `T00:00:00Z` here is just how two `YYYY-MM-DD` labels get subtracted as whole days
+ * (any fixed instant per day would do); it isn't the site's day boundary, see
+ * `todayParisDate`, and doesn't need to move in step with it.
  */
 export const puzzleNumber = (date: string): number =>
   Math.round((Date.parse(`${date}T00:00:00Z`) - DAILY_EPOCH_MS) / 86_400_000) + 1;

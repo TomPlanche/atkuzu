@@ -1,8 +1,8 @@
-import { dailyFileUrl, todayUtcDate, type DailyFile } from "$lib/game/daily";
+import { dailyFileUrl, todayParisDate, type DailyFile } from "$lib/game/daily";
 import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ fetch }) => {
-  const date = todayUtcDate();
+  const date = todayParisDate();
   const response = await fetch(dailyFileUrl(date));
 
   if (!response.ok) {
