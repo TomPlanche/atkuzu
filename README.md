@@ -111,6 +111,9 @@ NSID authority (domain authority `atkuzu.tomplanche.com`, reversed):
 - [lexicons/com/tomplanche/atkuzu/stats.json](./lexicons/com/tomplanche/atkuzu/stats.json):
   `com.tomplanche.atkuzu.stats`, a single mutable per-account record (`currentStreak`, `maxStreak`, `gamesPlayed`,
   `gamesWon`, `lastPuzzleNumber`), also doubling as the "this account plays atkuzu" declaration record
+- [lexicons/com/tomplanche/atkuzu/preferences.json](./lexicons/com/tomplanche/atkuzu/preferences.json):
+  `com.tomplanche.atkuzu.preferences`, a single mutable per-account record of board display preferences (`theme`:
+  `digits`, `sunmoon`, or `colors`), read back on load and synced across devices
 
 Validate the schemas against the [Lexicon Style Guide](https://atproto.com/guides/lexicon-style-guide):
 

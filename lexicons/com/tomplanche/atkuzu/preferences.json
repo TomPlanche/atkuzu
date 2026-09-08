@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "com.tomplanche.atkuzu.preferences",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A single, mutable per-account record of the player's board display preferences, edited in place like a profile.",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["theme", "updatedAt"],
+        "properties": {
+          "theme": {
+            "type": "string",
+            "enum": ["digits", "sunmoon", "colors"],
+            "description": "How filled cells are drawn on the board: 0/1 digits, sun/moon symbols, or two flat colors with no symbol."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When this record was last updated."
+          }
+        }
+      }
+    }
+  }
+}

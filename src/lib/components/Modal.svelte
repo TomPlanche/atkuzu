@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import { toasterHostRef } from "$lib/state/toaster-host.svelte";
 
   type Props = {
     open: boolean;
@@ -39,6 +40,24 @@
       dialogEl.showModal();
     } else if (!open && dialogEl.open) {
       dialogEl.close();
+    }
+
+    // Move the app's single <Toaster> host in and out of this dialog while it's open, so
+    // toasts fired during that time render above it (see toaster-host.svelte.ts): a modal
+    // <dialog> paints above a plain top-layer popover regardless of z-index or show order,
+    // so becoming a DOM descendant of the dialog is the only way to win that stacking.
+    const host = toasterHostRef.el;
+    if (!host) {
+      return;
+    }
+
+    if (open) {
+      // dialogEl's own template children (.modal__panel) are static, so appending this
+      // extra node alongside them doesn't fight Svelte's reconciliation.
+      // eslint-disable-next-line svelte/no-dom-manipulating
+      dialogEl.appendChild(host);
+    } else if (host.parentElement === dialogEl) {
+      document.body.appendChild(host);
     }
   });
 </script>

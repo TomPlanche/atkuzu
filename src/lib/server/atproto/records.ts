@@ -2,8 +2,9 @@
 // completion. See src/routes/daily/README.md and the lexicons under lexicons/com/tomplanche/atkuzu/.
 
 import type { Agent } from "@atproto/api";
-import { type BoardSize, puzzleNumber, todayUtcDate } from "$lib/game/daily";
+import { puzzleNumber, todayUtcDate } from "$lib/game/daily";
 import { logger } from "$lib/server/logger";
+import type { BoardSize } from "$lib/game/board";
 
 export const RESULT_COLLECTION = "com.tomplanche.atkuzu.result";
 const STATS_COLLECTION = "com.tomplanche.atkuzu.stats";

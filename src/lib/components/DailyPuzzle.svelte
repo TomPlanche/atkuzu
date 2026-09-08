@@ -17,6 +17,7 @@
   import { pdslsRecordUrl } from "$lib/pdsls";
   import { historyModal } from "$lib/state/history-modal.svelte";
   import { calendarModal } from "$lib/state/calendar-modal.svelte";
+  import { themeStore } from "$lib/state/theme.svelte";
   import { TextMorph } from "torph/svelte";
   import toast from "svelte-french-toast";
   import { toastErrorOptions, toastLoadingOptions, toastSuccessOptions } from "$lib/toast";
@@ -597,7 +598,15 @@
       </div>
     </div>
 
-    <Board size={selectedSize} {board} {given} {invalid} {solved} oncellclick={cycleCell} />
+    <Board
+      size={selectedSize}
+      {board}
+      {given}
+      {invalid}
+      {solved}
+      theme={themeStore.theme}
+      oncellclick={cycleCell}
+    />
 
     <p aria-hidden={!solved} class="solved-banner" class:visible={solved}>
       <span class="solved-banner__pill">

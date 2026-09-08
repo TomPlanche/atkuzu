@@ -12,6 +12,7 @@
   import { isRedoCombo, isUndoCombo } from "$lib/game/keys";
   import Board from "$lib/components/Board.svelte";
   import Button from "$lib/components/Button.svelte";
+  import { themeStore } from "$lib/state/theme.svelte";
   import { TextMorph } from "torph/svelte";
 
   const history = createMoveHistory();
@@ -350,6 +351,7 @@
       oncellclick={cycleCell}
       size={selectedSize}
       solved={isSolved}
+      theme={themeStore.theme}
     />
 
     <p aria-hidden={!isSolved} class="solved-banner" class:visible={isSolved}>

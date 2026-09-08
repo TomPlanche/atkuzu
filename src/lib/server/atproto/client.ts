@@ -11,7 +11,7 @@ import type { OAuthClientMetadataInput } from "@atproto/oauth-types";
 //For permission to all you can uncomment below
 // const DEFAULT_SCOPES = 'atproto transition:generic';
 const DEFAULT_SCOPES =
-  "atproto repo:com.tomplanche.atkuzu.result?action=create repo:com.tomplanche.atkuzu.stats?action=create&action=update";
+  "atproto repo:com.tomplanche.atkuzu.result?action=create repo:com.tomplanche.atkuzu.stats?action=create&action=update repo:com.tomplanche.atkuzu.preferences?action=create&action=update";
 const loadJwk = async () => {
   const raw = env.OAUTH_JWK;
   if (!raw) {

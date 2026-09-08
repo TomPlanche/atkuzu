@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Cell } from "$lib/game/board";
+  import type { Theme } from "$lib/state/theme.svelte";
 
   type Props = {
     size: number;
@@ -7,10 +8,11 @@
     given: boolean[][];
     invalid: boolean[][];
     solved: boolean;
+    theme: Theme;
     oncellclick: (r: number, c: number) => void;
   };
 
-  let { size, board, given, invalid, solved, oncellclick }: Props = $props();
+  let { size, board, given, invalid, solved, theme, oncellclick }: Props = $props();
 
   // Not reactive on purpose: this is an imperative registry of DOM nodes for keyboard
   // navigation, not render state, so it doesn't need (and shouldn't trigger) reactivity.
@@ -93,8 +95,44 @@
   });
 </script>
 
+{#snippet sunIcon()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <circle cx="12" cy="12" r="5" />
+    <line x1="12" y1="1" x2="12" y2="3" />
+    <line x1="12" y1="21" x2="12" y2="23" />
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+    <line x1="1" y1="12" x2="3" y2="12" />
+    <line x1="21" y1="12" x2="23" y2="12" />
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+  </svg>
+{/snippet}
+
+{#snippet moonIcon()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+{/snippet}
+
 <div class="board-wrap">
-  <div class="board" class:solved style="--size: {size}">
+  <div class="board" class:solved class:theme-colors={theme === "colors"} style="--size: {size}">
     {#each board as row, r (r)}
       {#each row as cell, c (c)}
         <button
@@ -104,12 +142,18 @@
           class:given={given[r][c]}
           class:filled={cell !== null}
           class:invalid={invalid[r][c]}
+          class:cell--zero={cell === 0}
+          class:cell--one={cell === 1}
           disabled={given[r][c]}
           aria-label={`Row ${r + 1}, column ${c + 1}`}
           onclick={() => oncellclick(r, c)}
           onkeydown={(event) => onCellKeydown(event, r, c)}
         >
-          {cell === null ? "" : cell}
+          {#if cell !== null && theme === "sunmoon"}
+            <span class="cell__icon">{@render (cell === 1 ? sunIcon : moonIcon)()}</span>
+          {:else if theme !== "colors"}
+            {cell === null ? "" : cell}
+          {/if}
         </button>
       {/each}
     {/each}
@@ -200,5 +244,30 @@
         background-color: color-mix(in oklab, var(--surface) 55%, white);
       }
     }
+  }
+
+  .cell__icon {
+    display: inline-flex;
+    width: clamp(0.9rem, calc(28cqw / var(--size)), 1.6rem);
+    height: clamp(0.9rem, calc(28cqw / var(--size)), 1.6rem);
+
+    :global(svg) {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  // Colors theme: the fill *is* the value, so it has to win over .given's lighter background
+  // too (a given cell still needs to read as 0 or 1, not just "pre-filled"). --accent and
+  // --rust-green, not --accent/--accent-secondary (too close in hue): this is the only cue,
+  // so it needs the same clear separation the /daily calendar's status colors settled on.
+  .theme-colors .cell.cell--zero,
+  .theme-colors .cell.cell--zero.given {
+    background-color: color-mix(in oklab, var(--rust-green) 55%, var(--surface));
+  }
+
+  .theme-colors .cell.cell--one,
+  .theme-colors .cell.cell--one.given {
+    background-color: color-mix(in oklab, var(--accent) 55%, var(--surface));
   }
 </style>

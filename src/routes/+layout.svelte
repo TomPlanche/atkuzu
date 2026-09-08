@@ -9,10 +9,14 @@
   import Modal from "$lib/components/Modal.svelte";
   import LoginForm from "$lib/components/LoginForm.svelte";
   import HowToPlay from "$lib/components/HowToPlay.svelte";
+  import ThemePicker from "$lib/components/ThemePicker.svelte";
   import Header from "$lib/components/Header.svelte";
   import Footer from "$lib/components/Footer.svelte";
   import { loginModal } from "$lib/state/login-modal.svelte";
   import { rulesModal } from "$lib/state/rules-modal.svelte";
+  import { themeModal } from "$lib/state/theme-modal.svelte";
+  import { themeStore } from "$lib/state/theme.svelte";
+  import { toasterHostRef } from "$lib/state/toaster-host.svelte";
 
   let { children, data } = $props();
 
@@ -25,6 +29,11 @@
     style:
       "border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--fg); box-shadow: none; font-family: var(--font-sans); font-size: 0.9rem; padding: 10px 14px;"
   };
+
+  // <Toaster> lives in `toasterHost`, a plain div that Modal.svelte portals into
+  // whichever <dialog> is currently open (see toaster-host.svelte.ts for why: a modal
+  // <dialog> always paints above regular content, toast included, regardless of z-index).
+  let toasterHost = $state<HTMLDivElement>();
 
   // OAuth callback and /logout redirect here with ?toast=connected|disconnected so the
   // toast fires exactly once, right after the PDS session actually changed.
@@ -48,6 +57,21 @@
     // before SvelteKit's router finishes starting, and replaceState throws until then.
     setTimeout(() => replaceState(resolve("/"), {}));
   });
+
+  // Client-only: applies the locally saved theme immediately (localStorage doesn't exist
+  // during SSR), then reconciles with the PDS if logged in. Re-runs on login (data.session
+  // going from null to set), which is exactly when a PDS-side choice first becomes knowable.
+  $effect(() => {
+    themeStore.hydrate();
+
+    if (data.session) {
+      void themeStore.syncFromPds();
+    }
+  });
+
+  $effect(() => {
+    toasterHostRef.set(toasterHost);
+  });
 </script>
 
 <svelte:head>
@@ -58,7 +82,9 @@
   <meta content="A game built on the AT Protocol." property="description" />
 </svelte:head>
 
-<Toaster {toastOptions} />
+<div bind:this={toasterHost} class="toaster-host">
+  <Toaster {toastOptions} />
+</div>
 
 <Header session={data.session} />
 
@@ -78,9 +104,20 @@
   <HowToPlay />
 </Modal>
 
+<Modal bind:open={themeModal.open} labelledby="theme-modal-title" compact>
+  <ThemePicker />
+</Modal>
+
 <Footer />
 
 <style lang="scss">
+  // A pure structural wrapper (see toaster-host.svelte.ts): it needs no visuals of its
+  // own, only a stable node Modal.svelte can move around the DOM. display: contents keeps
+  // it from introducing a box that could otherwise affect layout.
+  .toaster-host {
+    display: contents;
+  }
+
   .modal-subtitle {
     margin-block-end: var(--space-4);
     color: var(--muted);

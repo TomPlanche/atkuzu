@@ -4,6 +4,7 @@
   import Button from "$lib/components/Button.svelte";
   import { loginModal } from "$lib/state/login-modal.svelte";
   import { rulesModal } from "$lib/state/rules-modal.svelte";
+  import { themeModal } from "$lib/state/theme-modal.svelte";
   import { pdslsProfileUrl } from "$lib/pdsls";
 
   type Props = {
@@ -36,6 +37,21 @@
   </svg>
 {/snippet}
 
+{#snippet themeIcon()}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <circle cx="9" cy="12" r="7" />
+    <circle cx="15" cy="12" r="7" />
+  </svg>
+{/snippet}
+
 {#snippet signUpIcon()}
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -60,6 +76,14 @@
       <a class="nav-link" href={resolve("/daily")}>Daily</a>
       <button class="nav-link nav-link--btn" type="button" onclick={() => rulesModal.show()}>
         How to play
+      </button>
+      <button
+        class="theme-btn"
+        type="button"
+        aria-label="Board theme"
+        onclick={() => themeModal.show()}
+      >
+        {@render themeIcon()}
       </button>
     </div>
     {#if session}
@@ -139,6 +163,28 @@
     padding: 0;
     font-family: inherit;
     cursor: pointer;
+  }
+
+  .theme-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: none;
+    background: none;
+    padding: 0;
+    color: var(--muted);
+    cursor: pointer;
+
+    :global(svg) {
+      width: 100%;
+      height: 100%;
+    }
+
+    &:hover {
+      color: var(--fg);
+    }
   }
 
   .navbar {
