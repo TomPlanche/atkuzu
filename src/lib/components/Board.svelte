@@ -14,6 +14,17 @@
 
   let { size, board, given, invalid, solved, theme, oncellclick }: Props = $props();
 
+  // .board-wrap centers the board (largest square that fits), so its own leftover space
+  // just becomes symmetric margins around a board that never grows past the pure-CSS
+  // width rule below, however much vertical room a short page (like /daily) actually has.
+  // Measuring the wrap directly with a ResizeObserver and feeding that back in as a CSS
+  // var lets the board size off whichever dimension is tighter. (A container-query version
+  // of this, sizing straight off .board-wrap, was tried first and broke layout badly when
+  // combined with its flex: 1 sizing, hence measuring in JS instead.)
+  let boardWrapEl: HTMLDivElement | undefined = $state();
+  let wrapMinSide = $state<number>();
+  let wrapMinStyle = $derived(wrapMinSide ? `--wrap-min: ${wrapMinSide}px;` : "");
+
   // Not reactive on purpose: this is an imperative registry of DOM nodes for keyboard
   // navigation, not render state, so it doesn't need (and shouldn't trigger) reactivity.
   // oxlint-disable-next-line svelte/prefer-svelte-reactivity
@@ -93,6 +104,23 @@
     window.addEventListener("keydown", onWindowKeydown);
     return () => window.removeEventListener("keydown", onWindowKeydown);
   });
+
+  $effect(() => {
+    const el = boardWrapEl;
+    if (!el) {
+      return;
+    }
+
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      wrapMinSide = Math.min(rect.width, rect.height);
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  });
 </script>
 
 {#snippet sunIcon()}
@@ -131,8 +159,13 @@
   </svg>
 {/snippet}
 
-<div class="board-wrap">
-  <div class="board" class:solved class:theme-colors={theme === "colors"} style="--size: {size}">
+<div class="board-wrap" bind:this={boardWrapEl}>
+  <div
+    class="board"
+    class:solved
+    class:theme-colors={theme === "colors"}
+    style="--size: {size}; {wrapMinStyle}"
+  >
     {#each board as row, r (r)}
       {#each row as cell, c (c)}
         <button
@@ -165,25 +198,39 @@
     flex: 1;
     min-height: 0;
     display: flex;
-    align-items: center;
+    // A square board on a portrait phone is always width-capped (a taller box can't widen
+    // a square past its narrower side, the wrap-min measurement above notwithstanding), so
+    // centering it vertically just splits the leftover height into equal dead margins
+    // above and below. Bottom-aligning it instead pushes all of that leftover space above
+    // the board, so what's left before the footer is just .daily's own padding. Only worth
+    // it on a short mobile viewport, where that trailing gap reads as broken; a taller
+    // desktop window has room to spare either way, and flex-end there just looks lopsided
+    // (all the slack dumped above the board instead of split evenly), so centering wins back.
+    align-items: flex-end;
     justify-content: center;
+
+    @media (min-width: 640px) {
+      align-items: center;
+    }
   }
 
   .board {
     display: grid;
     grid-template-columns: repeat(var(--size), 1fr);
     gap: 6px;
-    // Near-full-width on a narrow phone screen, where every bit of the board's own size
-    // matters; 70% only once there's enough room to spare (matches Button.svelte's kbd
-    // breakpoint). height/aspect-ratio still cap it to whatever's vertically available.
-    width: 96%;
+    // The board only ever grew off width before, so a short page (e.g. /daily, not much
+    // else on it) left it small and centered in a lot of unused vertical space: --wrap-min
+    // (set from the ResizeObserver above, once measured) is .board-wrap's own tighter side,
+    // letting the board grow into whichever dimension is actually scarcer. Falls back to a
+    // plain width until JS has measured once (SSR, first paint).
+    width: min(96%, calc(var(--wrap-min, 9999px) * 0.96));
     height: auto;
     max-height: 100%;
     aspect-ratio: 1;
     container-type: inline-size;
 
     @media (min-width: 640px) {
-      width: 70%;
+      width: min(70%, calc(var(--wrap-min, 9999px) * 0.7));
     }
 
     &.solved .cell {

@@ -126,7 +126,17 @@
   main {
     display: flex;
     flex-direction: column;
+    // /play and /daily's top-level section already stretches to fill main itself
+    // (flex: 1 there too) and centers its own content, so this is a no-op for them; it's
+    // for routes like / (a plain hero, no flex: 1 of its own) that would otherwise just
+    // sit at the top with all the leftover height dumped below it, right above the footer.
+    justify-content: center;
     flex: 1;
     min-height: 0;
+    // Footer.svelte is position: fixed to the viewport bottom now (always in the same
+    // screen position, not trailing whatever content is above it), so this reserves the
+    // space it actually occupies (measured there, --footer-height) to keep content from
+    // running underneath it, with a plain guess as the fallback until that's measured.
+    padding-bottom: var(--footer-height, 4rem);
   }
 </style>

@@ -78,7 +78,10 @@
     position: relative;
     display: block;
     width: 100%;
-    max-width: 26rem;
+    // A flat 26rem regardless of viewport left this small on anything wider than a phone;
+    // scale with the available width instead, capped so it doesn't dominate a wide desktop
+    // window (a decorative teaser, not the real board /play and /daily use).
+    max-width: min(90%, 42rem);
     border-radius: var(--radius-md);
 
     &:hover,

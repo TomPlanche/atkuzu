@@ -608,20 +608,22 @@
       oncellclick={cycleCell}
     />
 
-    <p aria-hidden={!solved} class="solved-banner" class:visible={solved}>
-      <span class="solved-banner__pill">
-        {#if isSolved}
-          Solved this {selectedSize}×{selectedSize}.
-        {:else}
-          Already solved this {selectedSize}×{selectedSize}.
-        {/if}
-        {#if recordUrl}
-          <!-- recordUrl is always an absolute https://pdsls.dev/... URL, built in pdslsUrl() above -->
-          <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-          &nbsp;<a href={recordUrl} target="_blank" rel="noopener noreferrer">View record</a>
-        {/if}
-      </span>
-    </p>
+    {#if solved}
+      <p class="solved-banner">
+        <span class="solved-banner__pill">
+          {#if isSolved}
+            Solved this {selectedSize}×{selectedSize}.
+          {:else}
+            Already solved this {selectedSize}×{selectedSize}.
+          {/if}
+          {#if recordUrl}
+            <!-- recordUrl is always an absolute https://pdsls.dev/... URL, built in pdslsUrl() above -->
+            <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+            &nbsp;<a href={recordUrl} target="_blank" rel="noopener noreferrer">View record</a>
+          {/if}
+        </span>
+      </p>
+    {/if}
   {/if}
 </section>
 
@@ -789,11 +791,6 @@
     flex-shrink: 0;
     margin-block-start: var(--space-6);
     text-align: center;
-    visibility: hidden;
-
-    &.visible {
-      visibility: visible;
-    }
 
     &__pill {
       display: inline-flex;

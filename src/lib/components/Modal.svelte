@@ -85,7 +85,11 @@
     background: transparent;
     width: 100%;
     max-width: min(45rem, calc(100vw - 2rem));
+    // svh accounts for Safari on iOS's collapsing toolbar without dvh's live reflow as
+    // that toolbar animates (see _base.scss); vh is the fallback for browsers that don't
+    // support svh.
     max-height: calc(100vh - 4rem);
+    max-height: calc(100svh - 4rem);
     overflow-y: auto;
 
     &--compact {

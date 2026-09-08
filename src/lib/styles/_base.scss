@@ -1,7 +1,14 @@
 body {
   display: flex;
   flex-direction: column;
+  // svh (small viewport height, assumes the browser's toolbar is showing) accounts for
+  // Safari on iOS's collapsing toolbar without the flip side of dvh: dvh recalculates
+  // live as that toolbar animates in and out while scrolling, which reflows this flex
+  // column's whole height (and so the footer's position) along with it, making the page
+  // feel like it's constantly resizing. vh is the fallback for browsers that don't support
+  // svh (an unsupported value is dropped, not overridden by it).
   min-height: 100vh;
+  min-height: 100svh;
   background:
     radial-gradient(
       60rem 30rem at 15% -10%,

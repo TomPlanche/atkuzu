@@ -1,3 +1,32 @@
+<script lang="ts">
+  // Fixed to the bottom of the viewport (see .site-footer below) so it's always in the
+  // same screen position regardless of how much content a given page has, instead of
+  // trailing whatever's above it. That takes it out of normal flow, so the page's actual
+  // content needs bottom padding reserved to match, or the footer would just cover it;
+  // measuring the real rendered height here avoids guessing a fixed padding value that
+  // could under-reserve (overlap) or over-reserve (dead scroll space) on some viewport.
+  let footerEl: HTMLElement | undefined = $state();
+
+  $effect(() => {
+    const el = footerEl;
+    if (!el) {
+      return;
+    }
+
+    const update = () => {
+      document.documentElement.style.setProperty(
+        "--footer-height",
+        `${el.getBoundingClientRect().height}px`
+      );
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  });
+</script>
+
 {#snippet tangledMark()}
   <svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -6,7 +35,7 @@
   </svg>
 {/snippet}
 
-<footer class="site-footer">
+<footer class="site-footer" bind:this={footerEl}>
   <div class="container site-footer__inner">
     <span>
       Made by <a href="https://tomplanche.com">Tom Planche</a>.
@@ -23,7 +52,14 @@
 
 <style lang="scss">
   .site-footer {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
     border-top: 1px solid var(--border);
+    background: color-mix(in oklab, var(--bg) 75%, transparent);
+    backdrop-filter: blur(8px);
 
     &__inner {
       display: flex;
