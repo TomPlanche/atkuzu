@@ -26,7 +26,8 @@
     "records:delete": "tsx scripts/delete-record.ts",
     "daily:generate": "tsx scripts/generate-daily.ts",
     "daily:schedule": "tsx scripts/schedule-daily.ts",
-    "daily:check-epoch": "tsx scripts/check-daily-epoch.ts"
+    "daily:check-epoch": "tsx scripts/check-daily-epoch.ts",
+    "daily:reveal": "tsx scripts/reveal-solution.ts"
   },
   "dependencies": {
     "@atproto/api": "^0.20.42",

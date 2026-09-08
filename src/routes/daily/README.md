@@ -2,6 +2,8 @@
 
 This route renders the daily Takuzu puzzles: 6x6, 8x8, and 12x12, identical for every player on a given UTC day. No backend: puzzles are pre-generated offline (`scripts/generate-daily.ts`, wrapping the vendored `takuzu-grid-factory`) and published as immutable static JSON at `/daily/<YYYY-MM-DD>.json`. `+page.ts` only fetches that file; the route holds no generator and no solution. A completed, rule-valid board is confirmed against the file's `solutionSha256`, so the answer is never sent to the client.
 
+`solutionSha256` is a one-way hash, not something to decrypt: `pnpm run daily:reveal -- <YYYY-MM-DD> <size>` instead reproduces the solution the same way `generate-daily.ts` produced it in the first place (same `ATKUZU_DAILY_SEED`-derived seed, same generator run, nothing written to disk), then confirms the resulting hash against the local archive file if one exists.
+
 Board rendering and rule validation are shared with `/play` via `$lib/game/board.ts` and `$lib/components/Board.svelte`.
 
 Board progress persists per date and size in `localStorage`. No account required to play.
