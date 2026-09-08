@@ -29,21 +29,37 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
+      align-items: baseline;
       row-gap: var(--space-2);
-      column-gap: var(--space-4);
+      column-gap: var(--space-3);
       padding-block-start: var(--space-4);
       // The floating bottom toolbar on iOS Safari sits over content that runs flush to the
       // viewport edge; env(safe-area-inset-bottom) is 0 on browsers that don't need it.
       padding-block-end: max(var(--space-4), env(safe-area-inset-bottom));
-      font-size: 1rem;
+      font-size: 0.8rem;
       color: var(--muted);
+
+      @media (min-width: 640px) {
+        column-gap: var(--space-4);
+        font-size: 1rem;
+      }
     }
+  }
+
+  // Stops each phrase from breaking mid-word on a narrow screen: with this and the reduced
+  // gap/font-size above, everything fits on the footer's one line down to a normal phone width.
+  .site-footer__inner > * {
+    white-space: nowrap;
   }
 
   .site-footer__links {
     display: flex;
     align-items: center;
-    gap: var(--space-6);
+    gap: var(--space-3);
+
+    @media (min-width: 640px) {
+      gap: var(--space-6);
+    }
   }
 
   .tangled-link {

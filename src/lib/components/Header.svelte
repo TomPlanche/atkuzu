@@ -5,7 +5,6 @@
   import { loginModal } from "$lib/state/login-modal.svelte";
   import { rulesModal } from "$lib/state/rules-modal.svelte";
   import { themeModal } from "$lib/state/theme-modal.svelte";
-  import { pdslsProfileUrl } from "$lib/pdsls";
 
   type Props = {
     session: App.Session | null;
@@ -74,8 +73,14 @@
     <div class="site-header__left">
       <a class="brand" href={resolve("/")}>atkuzu</a>
       <a class="nav-link" href={resolve("/daily")}>Daily</a>
-      <button class="nav-link nav-link--btn" type="button" onclick={() => rulesModal.show()}>
-        How to play
+      <button
+        aria-label="How to play"
+        class="nav-link nav-link--btn"
+        type="button"
+        onclick={() => rulesModal.show()}
+      >
+        <span class="nav-link__short" aria-hidden="true">?</span>
+        <span class="nav-link__full">How to play</span>
       </button>
       <button
         class="theme-btn"
@@ -88,17 +93,6 @@
     </div>
     {#if session}
       <nav class="navbar">
-        <!-- pdslsProfileUrl always returns an absolute https://pdsls.dev/... URL -->
-        <!-- eslint-disable svelte/no-navigation-without-resolve -->
-        <a
-          class="welcome"
-          href={pdslsProfileUrl(session.did)}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {session.handle}
-        </a>
-        <!-- eslint-enable svelte/no-navigation-without-resolve -->
         <form method="POST" action="/logout" use:enhance>
           <Button variant="secondary" icon={logoutIcon} type="submit">Log out</Button>
         </form>
@@ -129,7 +123,11 @@
       justify-content: space-between;
       row-gap: var(--space-2);
       column-gap: var(--space-4);
-      padding-block: var(--space-4);
+      padding-block: var(--space-3);
+
+      @media (min-width: 640px) {
+        padding-block: var(--space-4);
+      }
     }
   }
 
@@ -173,6 +171,22 @@
     cursor: pointer;
   }
 
+  .nav-link__short {
+    display: inline;
+
+    @media (min-width: 640px) {
+      display: none;
+    }
+  }
+
+  .nav-link__full {
+    display: none;
+
+    @media (min-width: 640px) {
+      display: inline;
+    }
+  }
+
   .theme-btn {
     display: inline-flex;
     align-items: center;
@@ -199,14 +213,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-4);
-  }
-
-  .welcome {
-    color: var(--muted);
-    font-size: 0.9rem;
-
-    &:hover {
-      color: var(--fg);
-    }
+    // Keeps this pinned to the row's right edge even when it wraps onto its own line
+    // (space-between only has an effect when there's another item left to space against).
+    margin-left: auto;
   }
 </style>

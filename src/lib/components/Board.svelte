@@ -173,11 +173,18 @@
     display: grid;
     grid-template-columns: repeat(var(--size), 1fr);
     gap: 6px;
-    width: 70%;
+    // Near-full-width on a narrow phone screen, where every bit of the board's own size
+    // matters; 70% only once there's enough room to spare (matches Button.svelte's kbd
+    // breakpoint). height/aspect-ratio still cap it to whatever's vertically available.
+    width: 96%;
     height: auto;
     max-height: 100%;
     aspect-ratio: 1;
     container-type: inline-size;
+
+    @media (min-width: 640px) {
+      width: 70%;
+    }
 
     &.solved .cell {
       border-color: var(--accent);
