@@ -5,6 +5,7 @@
   import { isRedoCombo, isUndoCombo } from "$lib/game/keys";
   import Board from "$lib/components/Board.svelte";
   import Button from "$lib/components/Button.svelte";
+  import { TextMorph } from "torph/svelte";
 
   const initialBoard: Cell[][] = parseGrid(PUZZLE);
   const given: boolean[][] = initialBoard.map((row) => row.map((c) => c !== null));
@@ -168,8 +169,8 @@
 <section class="play">
   <div class="play__bar">
     <div class="play__stats">
-      <span class="stat">Time <strong>{formatTime(elapsedSeconds)}</strong></span>
-      <span class="stat">Toggles <strong>{toggleCount}</strong></span>
+      <span class="stat">Time <TextMorph as="strong" text={formatTime(elapsedSeconds)} /></span>
+      <span class="stat">Toggles <TextMorph as="strong" text={String(toggleCount)} /></span>
     </div>
     <div class="play__actions">
       {#if import.meta.env.DEV}
@@ -240,7 +241,7 @@
     }
   }
 
-  .stat strong {
+  .stat :global(strong) {
     color: white;
     font-family: var(--font-mono);
   }

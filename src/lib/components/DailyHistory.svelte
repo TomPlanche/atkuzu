@@ -7,6 +7,7 @@
     readCompletions
   } from "$lib/game/completions";
   import { historyModal } from "$lib/state/history-modal.svelte";
+  import { TextMorph } from "torph/svelte";
 
   let completions = $state<Completion[]>(readCompletions());
 
@@ -35,15 +36,15 @@
 
 <div class="stats">
   <div class="stat-tile">
-    <span class="stat-tile__value">{stats.currentStreak}</span>
+    <TextMorph class="stat-tile__value" text={String(stats.currentStreak)} />
     <span class="stat-tile__label">Current streak</span>
   </div>
   <div class="stat-tile">
-    <span class="stat-tile__value">{stats.maxStreak}</span>
+    <TextMorph class="stat-tile__value" text={String(stats.maxStreak)} />
     <span class="stat-tile__label">Max streak</span>
   </div>
   <div class="stat-tile">
-    <span class="stat-tile__value">{stats.gamesPlayed}</span>
+    <TextMorph class="stat-tile__value" text={String(stats.gamesPlayed)} />
     <span class="stat-tile__label">Puzzles solved</span>
   </div>
 </div>
@@ -54,7 +55,10 @@
   <ul class="days">
     {#each days as day (day.date)}
       <li class="day">
-        <div class="day__date">{day.date} <span class="day__num">#{day.puzzleNumber}</span></div>
+        <div class="day__date">
+          {day.date}
+          <TextMorph class="day__num" text={`#${day.puzzleNumber}`} />
+        </div>
         <div class="day__sizes">
           {#each DAILY_SIZES as size (size)}
             {@const completion = day.sizes[size]}
@@ -95,18 +99,18 @@
     border-radius: var(--radius-sm);
     background: var(--surface);
 
-    &__value {
-      font-family: var(--font-mono);
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--fg);
-    }
-
     &__label {
       font-size: 0.75rem;
       color: var(--muted);
       text-align: center;
     }
+  }
+
+  .stat-tile :global(.stat-tile__value) {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--fg);
   }
 
   .empty {
@@ -134,15 +138,15 @@
       color: var(--fg);
     }
 
-    &__num {
-      color: var(--muted);
-      font-weight: 400;
-    }
-
     &__sizes {
       display: flex;
       gap: var(--space-2);
     }
+  }
+
+  .day :global(.day__num) {
+    color: var(--muted);
+    font-weight: 400;
   }
 
   .size-badge {

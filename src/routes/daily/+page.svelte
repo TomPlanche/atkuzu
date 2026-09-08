@@ -15,6 +15,7 @@
   import { recordCompletion } from "$lib/game/completions";
   import { pdslsRecordUrl } from "$lib/pdsls";
   import { historyModal } from "$lib/state/history-modal.svelte";
+  import { TextMorph } from "torph/svelte";
   import toast from "svelte-french-toast";
   import { toastErrorOptions, toastLoadingOptions, toastSuccessOptions } from "$lib/toast";
   import Board from "$lib/components/Board.svelte";
@@ -523,8 +524,8 @@
   {:else}
     <div class="daily__actions">
       <div class="daily__stats">
-        <span class="stat">Time <strong>{formatTime(elapsedSeconds)}</strong></span>
-        <span class="stat">Toggles <strong>{toggleCount}</strong></span>
+        <span class="stat">Time <TextMorph as="strong" text={formatTime(elapsedSeconds)} /></span>
+        <span class="stat">Toggles <TextMorph as="strong" text={String(toggleCount)} /></span>
       </div>
       <div class="daily__buttons">
         <Button
@@ -644,7 +645,7 @@
     }
   }
 
-  .stat strong {
+  .stat :global(strong) {
     color: white;
     font-family: var(--font-mono);
   }
