@@ -41,6 +41,16 @@ const generateToday = () => {
     // Never crash the scheduler over one failed run; today's grids stay
     // missing but tomorrow's job still fires.
     console.error(`[schedule-daily] generation failed for ${date}:`, error);
+    return;
+  }
+
+  // adapter-node serves static/ from whatever was copied into build/client at the last
+  // `vite build`, not read live from disk, so the fresh file above stays invisible to
+  // players until the site is rebuilt and pm2 picks up that new build on restart.
+  try {
+    execFileSync("pnpm", ["run", "build"], { cwd: REPO_ROOT, stdio: "inherit" });
+  } catch (error) {
+    console.error(`[schedule-daily] rebuild/restart failed after generating ${date}:`, error);
   }
 };
 

@@ -11,10 +11,13 @@
     <span>
       Made by <a href="https://tomplanche.com">Tom Planche</a>.
     </span>
-    <a class="tangled-link" href="https://tangled.org/tomplanche.com/ATKuzu">
-      Source
-      <span class="tangled-link__mark">{@render tangledMark()}</span>
-    </a>
+    <div class="site-footer__links">
+      <a href="https://tangled.org/tomplanche.com/atkuzu/issues/new">Report an issue</a>
+      <a class="tangled-link" href="https://tangled.org/tomplanche.com/ATKuzu">
+        Source
+        <span class="tangled-link__mark">{@render tangledMark()}</span>
+      </a>
+    </div>
   </div>
 </footer>
 
@@ -29,6 +32,12 @@
       font-size: 1rem;
       color: var(--muted);
     }
+  }
+
+  .site-footer__links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
   }
 
   .tangled-link {
